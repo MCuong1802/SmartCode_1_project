@@ -14,4 +14,24 @@ export class AppService {
   async getAllUsers(): Promise<User[]> {
     return await this.userRepository.find();
   }
+
+  // Lấy chi tiết thông tin cá nhân của User đang đăng nhập
+  async getProfile(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new Error('Không tìm thấy người dùng!');
+    }
+    return user;
+  }
+
+  // Cập nhật thông tin cá nhân (Họ tên, Email)
+  async updateProfile(userId: string, fullName: string, email: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new Error('Không tìm thấy người dùng!');
+    }
+    user.fullName = fullName;
+    user.email = email;
+    return this.userRepository.save(user);
+  }
 }

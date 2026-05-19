@@ -37,6 +37,88 @@ export default function AllNotesPage() {
   const [notes, setNotes] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
+  // States cho Modal Xem, Sửa, Xóa ghi chú
+  const [activeViewNote, setActiveViewNote] = useState<any | null>(null);
+  const [activeEditNote, setActiveEditNote] = useState<any | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editCategoryId, setEditCategoryId] = useState('');
+  const [activeDeleteId, setActiveDeleteId] = useState<string | null>(null);
+
+  // Mở modal Xem
+  const handleViewNote = (note: any) => {
+    setActiveViewNote(note);
+  };
+
+  // Mở modal Sửa
+  const handleEditNote = (note: any) => {
+    setActiveEditNote(note);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+    setEditCategoryId(note.category?.id || '');
+  };
+
+  // Lưu Ghi chú đã chỉnh sửa
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim()) {
+      alert('Tiêu đề không được để trống!');
+      return;
+    }
+    const token = localStorage.getItem('access_token');
+    try {
+      const res = await fetch(`http://localhost:3001/notes/${activeEditNote.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          content: editContent.trim(),
+          categoryId: editCategoryId || undefined
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNotes(prev => prev.map(n => n.id === activeEditNote.id ? data.note : n));
+        setActiveEditNote(null);
+      } else {
+        alert(data.message || 'Cập nhật thất bại');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Không thể kết nối đến máy chủ.');
+    }
+  };
+
+  // Mở modal Xóa (Xác nhận)
+  const handleDeleteNote = (id: string) => {
+    setActiveDeleteId(id);
+  };
+
+  // Xác nhận Xóa Ghi chú
+  const handleConfirmDelete = async () => {
+    if (!activeDeleteId) return;
+    const token = localStorage.getItem('access_token');
+    try {
+      const res = await fetch(`http://localhost:3001/notes/${activeDeleteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        setNotes(prev => prev.filter(n => n.id !== activeDeleteId));
+        setActiveDeleteId(null);
+      } else {
+        alert('Xóa thất bại');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Không thể kết nối đến máy chủ.');
+    }
+  };
+
   // Kiểm tra đăng nhập và nạp dữ liệu thực từ database
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -185,11 +267,11 @@ export default function AllNotesPage() {
         
         <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
           <Link
-            href="#"
+            href="/settings"
             className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="font-body-md text-body-md">Settings</span>
+            <span className="font-body-md text-body-md">Cài đặt</span>
           </Link>
 
           <button
@@ -335,7 +417,7 @@ export default function AllNotesPage() {
                 return (
                   <div
                     key={note.id}
-                    onClick={() => router.push('/new-note')}
+                    onClick={() => handleViewNote(note)}
                     className={`bg-surface-container-lowest border-t-4 ${colorClass} rounded-xl p-md shadow-sm border border-outline-variant hover:shadow-md transition-all group cursor-pointer flex flex-col`}
                   >
                     <div className="flex justify-between items-start mb-sm">
@@ -359,9 +441,44 @@ export default function AllNotesPage() {
 
                     <div className="flex justify-between items-center text-outline text-label-md pt-sm border-t border-outline-variant/10">
                       <span>{new Date(note.createdAt).toLocaleDateString('vi-VN')}</span>
-                      <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity text-[18px] text-primary" data-icon="arrow_forward">
-                        arrow_forward
-                      </span>
+                      
+                      <div className="flex items-center gap-xs">
+                        {/* Xem */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewNote(note);
+                          }}
+                          title="Xem chi tiết"
+                          className="p-1.5 rounded-full hover:bg-surface-container text-outline hover:text-primary transition-all active:scale-90"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">visibility</span>
+                        </button>
+                        
+                        {/* Sửa */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditNote(note);
+                          }}
+                          title="Chỉnh sửa"
+                          className="p-1.5 rounded-full hover:bg-surface-container text-outline hover:text-primary transition-all active:scale-90"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+                        
+                        {/* Xóa */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNote(note.id);
+                          }}
+                          title="Xóa ghi chú"
+                          className="p-1.5 rounded-full hover:bg-error-container/20 text-outline hover:text-error transition-all active:scale-90"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -559,6 +676,174 @@ export default function AllNotesPage() {
           <span className="material-symbols-outlined" data-icon="logout">logout</span>
         </button>
       </div>
+
+      {/* Modal Xem Chi Tiết Ghi Chú */}
+      {activeViewNote && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-md animate-in fade-in duration-200">
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-[600px] w-full p-xl shadow-2xl flex flex-col gap-lg animate-in zoom-in-95 duration-200 max-h-[85vh]">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-headline-md text-headline-md text-on-surface font-bold leading-tight">{activeViewNote.title}</h3>
+                <div className="flex flex-wrap items-center gap-md mt-sm text-outline font-label-md text-label-md">
+                  <div className="flex items-center gap-xs">
+                    <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                    <span className="font-bold">Ngày tạo:</span>
+                    <span>{new Date(activeViewNote.createdAt).toLocaleString('vi-VN')}</span>
+                  </div>
+                  {activeViewNote.updatedAt && (
+                    <div className="flex items-center gap-xs">
+                      <span className="material-symbols-outlined text-[16px]">update</span>
+                      <span className="font-bold">Cập nhật:</span>
+                      <span>{new Date(activeViewNote.updatedAt).toLocaleString('vi-VN')}</span>
+                    </div>
+                  )}
+                  {activeViewNote.category && (
+                    <span className="px-sm py-0.5 rounded-full bg-primary-container/20 text-primary font-bold text-[11px]">
+                      {activeViewNote.category.title}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveViewNote(null)}
+                className="p-1.5 rounded-full hover:bg-surface-container text-outline hover:text-on-surface transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto pr-xs font-body-md text-body-md text-on-surface-variant whitespace-pre-wrap leading-relaxed max-h-[50vh] scrollbar-thin">
+              {activeViewNote.content}
+            </div>
+            
+            <div className="flex justify-end gap-md pt-md border-t border-outline-variant/10 mt-auto">
+              <button
+                onClick={() => setActiveViewNote(null)}
+                className="px-xl py-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl font-bold transition-all active:scale-95 text-[14px]"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={() => {
+                  const note = activeViewNote;
+                  setActiveViewNote(null);
+                  handleEditNote(note);
+                }}
+                className="px-xl py-sm bg-primary text-on-primary rounded-xl font-bold transition-all active:scale-95 flex items-center gap-xs text-[14px]"
+              >
+                <span className="material-symbols-outlined text-[16px]">edit</span>
+                Chỉnh sửa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Chỉnh Sửa Ghi Chú */}
+      {activeEditNote && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-md animate-in fade-in duration-200">
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-[600px] w-full p-xl shadow-2xl flex flex-col gap-lg animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center pb-sm border-b border-outline-variant/35">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">Chỉnh sửa ghi chú</h3>
+              <button
+                onClick={() => setActiveEditNote(null)}
+                className="p-1.5 rounded-full hover:bg-surface-container text-outline hover:text-on-surface transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            
+            <div className="flex flex-col gap-md">
+              <div className="flex flex-col gap-xs">
+                <label className="font-label-md text-label-md text-on-surface-variant">Tiêu đề</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Nhập tiêu đề..."
+                  className="w-full px-md py-sm bg-surface border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface font-body-md"
+                />
+              </div>
+
+              <div className="flex flex-col gap-xs">
+                <label className="font-label-md text-label-md text-on-surface-variant">Danh mục</label>
+                <select
+                  value={editCategoryId}
+                  onChange={(e) => setEditCategoryId(e.target.value)}
+                  className="w-full px-md py-sm bg-surface border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface font-body-md cursor-pointer"
+                >
+                  <option value="">Không có danh mục</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-xs">
+                <label className="font-label-md text-label-md text-on-surface-variant">Nội dung</label>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  placeholder="Nhập nội dung ghi chú..."
+                  rows={8}
+                  className="w-full px-md py-sm bg-surface border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface font-body-md resize-none"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-md pt-sm border-t border-outline-variant/10">
+              <button
+                onClick={() => setActiveEditNote(null)}
+                className="px-xl py-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl font-bold transition-all active:scale-95 text-[14px]"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-xl py-sm bg-primary text-on-primary rounded-xl font-bold transition-all active:scale-95 text-[14px]"
+              >
+                Lưu thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Xác Nhận Xóa */}
+      {activeDeleteId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-md animate-in fade-in duration-200">
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant max-w-[400px] w-full p-xl shadow-2xl flex flex-col gap-lg animate-in zoom-in-95 duration-200">
+            <div className="flex gap-md items-start">
+              <div className="p-sm bg-error-container text-error rounded-full shrink-0">
+                <span className="material-symbols-outlined text-[24px]">warning</span>
+              </div>
+              <div>
+                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">Xóa ghi chú?</h3>
+                <p className="text-on-surface-variant font-body-md text-body-md mt-xs leading-normal">
+                  Bạn có chắc chắn muốn xóa ghi chú này? Hành động này không thể hoàn tác.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-md pt-xs">
+              <button
+                onClick={() => setActiveDeleteId(null)}
+                className="px-xl py-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl font-bold transition-all active:scale-95 text-[14px]"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-xl py-sm bg-error text-white hover:bg-error/90 rounded-xl font-bold transition-all active:scale-95 text-[14px]"
+              >
+                Xóa ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

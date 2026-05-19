@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from './auth/auth.guard';
 import { NoteService } from './note.service';
 
@@ -33,6 +33,51 @@ export class NoteController {
   ) {
     const userId = req.user.sub;
     return this.noteService.create(userId, body);
+  }
+
+  @Put(':id')
+  async update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: { title: string; content: string; categoryId?: string },
+  ) {
+    const userId = req.user.sub;
+    const note = await this.noteService.update(userId, id, body);
+    return {
+      message: 'Cập nhật ghi chú thành công!',
+      note: {
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        createdAt: note.createdAt,
+        updatedAt: note.updatedAt,
+        category: note.category ? {
+          id: note.category.id,
+          title: note.category.title,
+          colorName: note.category.colorName,
+          icon: note.category.icon,
+        } : null,
+      }
+    };
+  }
+
+  @Get(':id')
+  async findOne(@Req() req: any, @Param('id') id: string) {
+    const userId = req.user.sub;
+    const note = await this.noteService.findOne(userId, id);
+    return {
+      id: note.id,
+      title: note.title,
+      content: note.content,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+      category: note.category ? {
+        id: note.category.id,
+        title: note.category.title,
+        colorName: note.category.colorName,
+        icon: note.category.icon,
+      } : null,
+    };
   }
 
   @Delete(':id')

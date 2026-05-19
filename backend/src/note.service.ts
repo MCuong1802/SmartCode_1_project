@@ -58,4 +58,44 @@ export class NoteService {
     }
     await this.noteRepo.remove(note);
   }
+
+  async update(
+    userId: string,
+    id: string,
+    data: { title: string; content: string; categoryId?: string },
+  ): Promise<Note> {
+    const note = await this.noteRepo.findOne({
+      where: { id, user: { id: userId } },
+      relations: ['category'],
+    });
+    if (!note) {
+      throw new NotFoundException('Không tìm thấy ghi chú để cập nhật!');
+    }
+
+    if (data.categoryId !== undefined) {
+      if (data.categoryId) {
+        const category = await this.categoryRepo.findOne({
+          where: { id: data.categoryId, user: { id: userId } },
+        });
+        note.category = category || undefined;
+      } else {
+        note.category = undefined;
+      }
+    }
+
+    note.title = data.title;
+    note.content = data.content;
+    return this.noteRepo.save(note);
+  }
+
+  async findOne(userId: string, id: string): Promise<Note> {
+    const note = await this.noteRepo.findOne({
+      where: { id, user: { id: userId } },
+      relations: ['category'],
+    });
+    if (!note) {
+      throw new NotFoundException('Không tìm thấy ghi chú!');
+    }
+    return note;
+  }
 }

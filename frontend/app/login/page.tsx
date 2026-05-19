@@ -9,11 +9,33 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const validate = () => {
+    const newErrors: { email?: string; password?: string } = {};
+    if (!email.trim()) {
+      newErrors.email = 'Email không được để trống';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Định dạng email không hợp lệ';
+    }
+
+    if (!password) {
+      newErrors.password = 'Mật khẩu không được để trống';
+    } else if (password.length < 6) {
+      newErrors.password = 'Mật khẩu phải chứa ít nhất 6 ký tự';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!validate()) return;
+
     setIsLoading(true);
 
     try {
@@ -82,21 +104,34 @@ export default function LoginPage() {
             )}
 
             {/* Form */}
-            <form onSubmit={handleLogin} className="w-full space-y-lg">
+            <form onSubmit={handleLogin} className="w-full space-y-lg" noValidate>
               {/* Email Field */}
               <div className="flex flex-col gap-xs">
                 <label className="font-label-md text-label-md text-on-surface-variant" htmlFor="email">Email</label>
                 <div className="relative">
                   <input
-                    className="w-full px-md py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white font-body-md text-body-md"
+                    className={`w-full px-md py-3 rounded-lg border focus:outline-none transition-all bg-white font-body-md text-body-md ${errors.email
+                      ? 'border-error focus:ring-1 focus:ring-error focus:border-error'
+                      : 'border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary'
+                      }`}
                     id="email"
                     placeholder="example@gmail.com"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) {
+                        setErrors(prev => ({ ...prev, email: undefined }));
+                      }
+                    }}
                   />
                 </div>
+                {errors.email && (
+                  <span className="text-error text-[12px] font-medium mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {errors.email}
+                  </span>
+                )}
               </div>
 
               {/* Password Field */}
@@ -107,15 +142,28 @@ export default function LoginPage() {
                 </div>
                 <div className="relative">
                   <input
-                    className="w-full px-md py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white font-body-md text-body-md"
+                    className={`w-full px-md py-3 rounded-lg border focus:outline-none transition-all bg-white font-body-md text-body-md ${errors.password
+                      ? 'border-error focus:ring-1 focus:ring-error focus:border-error'
+                      : 'border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary'
+                      }`}
                     id="password"
                     placeholder="••••••••"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errors.password) {
+                        setErrors(prev => ({ ...prev, password: undefined }));
+                      }
+                    }}
                   />
                 </div>
+                {errors.password && (
+                  <span className="text-error text-[12px] font-medium mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {errors.password}
+                  </span>
+                )}
               </div>
 
               {/* Submit Button */}

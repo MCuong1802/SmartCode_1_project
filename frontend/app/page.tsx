@@ -104,11 +104,11 @@ export default function HomePage() {
         
         <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
           <Link
-            href="#"
+            href="/settings"
             className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="font-body-md text-body-md">Settings</span>
+            <span className="font-body-md text-body-md">Cài đặt</span>
           </Link>
 
           <button

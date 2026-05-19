@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -8,7 +8,11 @@ export default function NewNotePage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('Đã lưu tự động');
+  const [saveStatus, setSaveStatus] = useState('Đã đồng bộ');
+
+  // ID của ghi chú hiện tại nếu đang ở chế độ chỉnh sửa (Sửa)
+  const [noteId, setNoteId] = useState<string | null>(null);
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
 
   // Trạng thái quản lý Tiêu đề & Nội dung
   const [title, setTitle] = useState('');
@@ -23,6 +27,24 @@ export default function NewNotePage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [relatedNotes, setRelatedNotes] = useState<any[]>([]);
+
+  // Thêm các Refs chống trùng lặp, đua tranh dữ liệu (Race Conditions)
+  const lastSavedTitleRef = useRef('');
+  const lastSavedContentRef = useRef('');
+  const lastSavedCategoryRef = useRef('');
+  const isSavingRef = useRef(false);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Lấy ID ghi chú từ URL search query trên Client-side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const id = searchParams.get('id');
+      if (id) {
+        setNoteId(id);
+      }
+    }
+  }, []);
 
   // Kiểm tra đăng nhập và nạp danh sách danh mục thực tế
   useEffect(() => {
@@ -41,7 +63,7 @@ export default function NewNotePage() {
       .then(data => {
         if (Array.isArray(data)) {
           setCategories(data);
-          if (data.length > 0) {
+          if (data.length > 0 && !selectedCategoryId) {
             setSelectedCategoryId(data[0].id);
           }
         }
@@ -58,17 +80,149 @@ export default function NewNotePage() {
         }
       })
       .catch(err => console.error('Error fetching related notes:', err));
-  }, [router]);
+  }, [router, selectedCategoryId]);
 
-  // Tự động thay đổi trạng thái khi chỉnh sửa
+  // Nạp thông tin ghi chú cũ nếu ở chế độ chỉnh sửa (Sửa)
+  useEffect(() => {
+    if (!noteId) return;
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    setSaveStatus('Đang tải ghi chú...');
+    fetch(`http://localhost:3001/notes/${noteId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Không tìm thấy ghi chú');
+        return res.json();
+      })
+      .then(data => {
+        setTitle(data.title);
+        setContent(data.content);
+        setCreatedAt(data.createdAt);
+        
+        // Cập nhật refs gốc ngay khi vừa nạp dữ liệu xong
+        lastSavedTitleRef.current = data.title;
+        lastSavedContentRef.current = data.content;
+        if (data.category) {
+          setSelectedCategoryId(data.category.id);
+          lastSavedCategoryRef.current = data.category.id;
+        }
+
+        setSaveStatus('Ghi chú đã tải');
+      })
+      .catch(err => {
+        console.error('Error loading note:', err);
+        setSaveStatus('Lỗi tải ghi chú!');
+      });
+  }, [noteId]);
+
+  // Debounced Auto-save Effect: Tự động lưu sau 2 giây khi người dùng dừng gõ
+  useEffect(() => {
+    if (!isAuthenticated || !title.trim()) return;
+
+    // Tránh lưu đè ngay lúc vừa load ghi chú cũ
+    if (noteId && saveStatus === 'Ghi chú đã tải') {
+      lastSavedTitleRef.current = title;
+      lastSavedContentRef.current = content;
+      lastSavedCategoryRef.current = selectedCategoryId;
+      setSaveStatus('Đã đồng bộ');
+      return;
+    }
+
+    // Nếu dữ liệu hoàn toàn khớp với bản lưu gần nhất, bỏ qua không lưu
+    if (
+      title === lastSavedTitleRef.current &&
+      content === lastSavedContentRef.current &&
+      selectedCategoryId === lastSavedCategoryRef.current
+    ) {
+      return;
+    }
+
+    // Xóa timer chờ lưu trước đó nếu có
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    setSaveStatus('Chưa lưu...');
+
+    autoSaveTimerRef.current = setTimeout(async () => {
+      if (isSavingRef.current) return; // Nếu có tiến trình lưu khác đang chạy thì bỏ qua
+
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+
+      isSavingRef.current = true;
+      setSaveStatus('Đang lưu tự động...');
+
+      const currentNoteId = noteId;
+      const url = currentNoteId 
+        ? `http://localhost:3001/notes/${currentNoteId}` 
+        : 'http://localhost:3001/notes';
+      const method = currentNoteId ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            title: title.trim(),
+            content: content.trim(),
+            categoryId: selectedCategoryId || undefined
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setSaveStatus('Đã lưu tự động');
+
+          // Ghi lại mốc nội dung đã lưu thành công
+          lastSavedTitleRef.current = title;
+          lastSavedContentRef.current = content;
+          lastSavedCategoryRef.current = selectedCategoryId;
+
+          // Nếu là tạo ghi chú mới lần đầu, lưu lại ID để lần sau cập nhật (PUT) thay vì tạo mới
+          if (!currentNoteId) {
+            const newId = data.id || data.note?.id;
+            if (newId) {
+              setNoteId(newId);
+              window.history.replaceState(null, '', `/new-note?id=${newId}`);
+            }
+          }
+        } else {
+          setSaveStatus('Lỗi lưu tự động');
+        }
+      } catch (err) {
+        console.error('Auto-save failed:', err);
+        setSaveStatus('Lỗi kết nối');
+      } finally {
+        isSavingRef.current = false;
+      }
+    }, 2000);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [title, content, selectedCategoryId, isAuthenticated, noteId]);
+
+  // Tự động thay đổi trạng thái khi chỉnh sửa thủ công
   const handleContentChange = (val: string) => {
     setContent(val);
-    setSaveStatus('Chưa lưu...');
+    if (val !== lastSavedContentRef.current) {
+      setSaveStatus('Chưa lưu...');
+    }
   };
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
-    setSaveStatus('Chưa lưu...');
+    if (val !== lastSavedTitleRef.current) {
+      setSaveStatus('Chưa lưu...');
+    }
   };
 
   // Hàm xử lý Lưu thủ công vào database
@@ -78,40 +232,61 @@ export default function NewNotePage() {
       return;
     }
 
+    // Xóa timer auto-save để tránh gửi 2 request song song
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    if (isSavingRef.current || isSaving) return;
+
     const token = localStorage.getItem('access_token');
     if (!token) return;
 
+    isSavingRef.current = true;
     setIsSaving(true);
     setSaveStatus('Đang lưu...');
+
+    const currentNoteId = noteId;
+    const url = currentNoteId 
+      ? `http://localhost:3001/notes/${currentNoteId}` 
+      : 'http://localhost:3001/notes';
+    const method = currentNoteId ? 'PUT' : 'POST';
     
-    fetch('http://localhost:3001/notes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        title: title.trim(),
-        content: content.trim(),
-        categoryId: selectedCategoryId || undefined
-      })
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to save');
-        return res.json();
-      })
-      .then(() => {
-        setIsSaving(false);
-        setSaveStatus('Đã lưu thành công!');
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
-      })
-      .catch(err => {
-        console.error('Error saving note:', err);
-        setIsSaving(false);
-        setSaveStatus('Lỗi khi lưu!');
+    try {
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          categoryId: selectedCategoryId || undefined
+        })
       });
+
+      if (!res.ok) throw new Error('Không thể lưu ghi chú');
+      
+      const data = await res.json();
+
+      // Cập nhật refs bản lưu
+      lastSavedTitleRef.current = title;
+      lastSavedContentRef.current = content;
+      lastSavedCategoryRef.current = selectedCategoryId;
+
+      setIsSaving(false);
+      setSaveStatus('Đã lưu thành công!');
+      setTimeout(() => {
+        router.push('/all-notes');
+      }, 800);
+    } catch (err) {
+      console.error('Error saving note:', err);
+      setIsSaving(false);
+      setSaveStatus('Lỗi khi lưu!');
+    } finally {
+      isSavingRef.current = false;
+    }
   };
 
   const handleAddTag = (e: React.FormEvent) => {
@@ -189,11 +364,11 @@ export default function NewNotePage() {
         
         <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
           <Link
-            href="#"
+            href="/settings"
             className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="font-body-md text-body-md">Settings</span>
+            <span className="font-body-md text-body-md">Cài đặt</span>
           </Link>
 
           <button
@@ -312,7 +487,7 @@ export default function NewNotePage() {
             <div className="flex items-center gap-lg mb-xl text-on-surface-variant font-label-md text-label-md flex-wrap">
               <div className="flex items-center gap-xs">
                 <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                <span>{new Date().toLocaleDateString('vi-VN')}</span>
+                <span>{createdAt ? new Date(createdAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</span>
               </div>
               <div className="flex items-center gap-xs">
                 <span className="material-symbols-outlined text-[18px]">folder</span>

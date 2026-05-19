@@ -26,7 +26,7 @@ backend/dist/
 # logs
 backend/logs
 backend/*.log
-backend/npm-debug.log*
+backend/npm-debug.log* 
 
 # env
 backend/.env

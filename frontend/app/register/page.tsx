@@ -11,12 +11,46 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{ fullName?: string; email?: string; password?: string; terms?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const validate = () => {
+    const newErrors: { fullName?: string; email?: string; password?: string; terms?: string } = {};
+    
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Họ và tên không được để trống';
+    } else if (fullName.trim().length < 2) {
+      newErrors.fullName = 'Họ và tên phải chứa ít nhất 2 ký tự';
+    }
+
+    if (!email.trim()) {
+      newErrors.email = 'Email không được để trống';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Định dạng email không hợp lệ';
+    }
+
+    if (!password) {
+      newErrors.password = 'Mật khẩu không được để trống';
+    } else if (password.length < 6) {
+      newErrors.password = 'Mật khẩu phải chứa ít nhất 6 ký tự';
+    }
+
+    const termsCheckbox = document.getElementById('terms') as HTMLInputElement | null;
+    if (termsCheckbox && !termsCheckbox.checked) {
+      newErrors.terms = 'Bạn phải đồng ý với điều khoản dịch vụ';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setMessage('');
+    
+    if (!validate()) return;
+    
     setIsLoading(true);
 
     try {
@@ -67,21 +101,35 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <form onSubmit={handleRegister} className="flex flex-col gap-lg">
+            <form onSubmit={handleRegister} className="flex flex-col gap-lg" noValidate>
               {/* Full Name Field */}
               <div className="flex flex-col gap-xs">
                 <label className="font-label-md text-label-md text-on-surface-variant" htmlFor="full_name">Họ và tên</label>
                 <div className="relative">
                   <input 
-                    className="w-full px-md py-sm bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-0 transition-all outline-none text-on-surface placeholder:text-outline font-body-md text-body-md" 
+                    className={`w-full px-md py-sm bg-surface rounded-lg border focus:outline-none transition-all text-on-surface placeholder:text-outline font-body-md text-body-md ${
+                      errors.fullName 
+                        ? 'border-error focus:ring-1 focus:ring-error focus:border-error' 
+                        : 'border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary'
+                    }`} 
                     id="full_name" 
                     placeholder="Nguyễn Văn A" 
                     type="text"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      if (errors.fullName) {
+                        setErrors(prev => ({ ...prev, fullName: undefined }));
+                      }
+                    }}
                   />
                 </div>
+                {errors.fullName && (
+                  <span className="text-error text-[12px] font-medium mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {errors.fullName}
+                  </span>
+                )}
               </div>
               
               {/* Email Field */}
@@ -89,15 +137,29 @@ export default function RegisterPage() {
                 <label className="font-label-md text-label-md text-on-surface-variant" htmlFor="email">Email</label>
                 <div className="relative">
                   <input 
-                    className="w-full px-md py-sm bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-0 transition-all outline-none text-on-surface placeholder:text-outline font-body-md text-body-md" 
+                    className={`w-full px-md py-sm bg-surface rounded-lg border focus:outline-none transition-all text-on-surface placeholder:text-outline font-body-md text-body-md ${
+                      errors.email 
+                        ? 'border-error focus:ring-1 focus:ring-error focus:border-error' 
+                        : 'border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary'
+                    }`} 
                     id="email" 
                     placeholder="ten@congty.com" 
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) {
+                        setErrors(prev => ({ ...prev, email: undefined }));
+                      }
+                    }}
                   />
                 </div>
+                {errors.email && (
+                  <span className="text-error text-[12px] font-medium mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {errors.email}
+                  </span>
+                )}
               </div>
               
               {/* Password Field */}
@@ -105,31 +167,59 @@ export default function RegisterPage() {
                 <label className="font-label-md text-label-md text-on-surface-variant" htmlFor="password">Mật khẩu</label>
                 <div className="relative">
                   <input 
-                    className="w-full px-md py-sm bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-0 transition-all outline-none text-on-surface placeholder:text-outline font-body-md text-body-md" 
+                    className={`w-full px-md py-sm bg-surface rounded-lg border focus:outline-none transition-all text-on-surface placeholder:text-outline font-body-md text-body-md ${
+                      errors.password 
+                        ? 'border-error focus:ring-1 focus:ring-error focus:border-error' 
+                        : 'border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary'
+                    }`} 
                     id="password" 
                     placeholder="••••••••" 
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errors.password) {
+                        setErrors(prev => ({ ...prev, password: undefined }));
+                      }
+                    }}
                   />
                 </div>
+                {errors.password && (
+                  <span className="text-error text-[12px] font-medium mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {errors.password}
+                  </span>
+                )}
               </div>
               
               {/* Terms of Service Checkbox */}
-              <div className="flex items-start gap-md py-xs">
-                <div className="flex items-center h-5">
-                  <input 
-                    className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" 
-                    id="terms" 
-                    name="terms" 
-                    type="checkbox"
-                    required
-                  />
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-start gap-md py-xs">
+                  <div className="flex items-center h-5">
+                    <input 
+                      className={`h-4 w-4 rounded text-primary focus:ring-primary cursor-pointer ${
+                        errors.terms ? 'border-error' : 'border-outline-variant'
+                      }`} 
+                      id="terms" 
+                      name="terms" 
+                      type="checkbox"
+                      onChange={(e) => {
+                        if (e.target.checked && errors.terms) {
+                          setErrors(prev => ({ ...prev, terms: undefined }));
+                        }
+                      }}
+                    />
+                  </div>
+                  <label className="font-body-sm text-body-sm text-secondary cursor-pointer" htmlFor="terms">
+                    Tôi đồng ý với <a className="text-primary hover:underline" href="#">Điều khoản dịch vụ</a> và <a className="text-primary hover:underline" href="#">Chính sách bảo mật</a>
+                  </label>
                 </div>
-                <label className="font-body-sm text-body-sm text-secondary cursor-pointer" htmlFor="terms">
-                  Tôi đồng ý với <a className="text-primary hover:underline" href="#">Điều khoản dịch vụ</a> và <a className="text-primary hover:underline" href="#">Chính sách bảo mật</a>
-                </label>
+                {errors.terms && (
+                  <span className="text-error text-[12px] font-medium mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {errors.terms}
+                  </span>
+                )}
               </div>
               
               {/* Submit Button */}
