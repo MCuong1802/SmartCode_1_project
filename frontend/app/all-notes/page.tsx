@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Sidebar from '../components/Sidebar';
+import TopBarActions from '../components/TopBarActions';
 
 interface NoteCard {
   id: string;
@@ -81,6 +83,24 @@ export default function AllNotesPage() {
     }
   };
 
+  // Xóa ghi chú (chuyển vào thùng rác)
+  const handleDelete = async (id: string) => {
+    if (!confirm('Chuyển ghi chú này vào thùng rác?')) return;
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    try {
+      const res = await fetch(`http://localhost:3001/notes/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setNotes((prev) => prev.filter((n) => n.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting note:', err);
+    }
+  };
+
   // Reset toàn bộ bộ lọc
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -93,23 +113,23 @@ export default function AllNotesPage() {
   const filteredNotes = notes
     .filter((note) => {
       // Lọc theo thanh tìm kiếm
-      const matchesSearch = 
+      const matchesSearch =
         note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         note.content.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Lọc theo Category Checkboxes
-      const matchesCategory = 
-        selectedCategories.length === 0 || 
+      const matchesCategory =
+        selectedCategories.length === 0 ||
         (note.category && selectedCategories.includes(note.category.title));
 
       // Lọc theo Tag Cloud (Nếu có tag được chọn, đối chiếu với tên danh mục)
-      const matchesTag = 
-        !selectedTag || 
+      const matchesTag =
+        !selectedTag ||
         (note.category && note.category.title.toLowerCase() === selectedTag.toLowerCase());
 
       // Lọc theo Mã màu
-      const matchesColor = 
-        !selectedColor || 
+      const matchesColor =
+        !selectedColor ||
         (note.category && note.category.colorName === selectedColor);
 
       return matchesSearch && matchesCategory && matchesTag && matchesColor;
@@ -133,89 +153,8 @@ export default function AllNotesPage() {
 
   return (
     <div className="bg-background text-on-surface flex h-screen overflow-hidden font-body-md antialiased w-full">
-      
-      <aside className="w-[260px] h-screen sticky top-0 left-0 border-r border-outline-variant bg-surface hidden md:flex flex-col p-md shrink-0">
-        <div className="mb-xl px-sm">
-          <h1 className="font-bold text-primary text-[20px] leading-[28px]">NotesApp</h1>
-          <p className="text-[14px] leading-[20px] text-on-surface-variant">Personal Workspace</p>
-        </div>
-        
-        <Link
-          href="/new-note"
-          className="mb-lg flex items-center justify-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95 shadow-sm text-center"
-        >
-          <span className="material-symbols-outlined" data-icon="add">add</span>
-          <span className="text-[14px]">New Note</span>
-        </Link>
-        
-        <nav className="flex flex-col gap-base flex-grow">
-          {/* Dashboard */}
-          <Link
-            href="/"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="grid_view">grid_view</span>
-            <span className="font-body-md text-body-md">Dashboard</span>
-          </Link>
-          {/* All Notes */}
-          <Link
-            href="/all-notes"
-            className="flex items-center gap-md px-md py-sm bg-primary-fixed text-on-primary-fixed rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="description">description</span>
-            <span className="font-body-md text-body-md">All Notes</span>
-          </Link>
-          {/* Categories */}
-          <Link
-            href="/categories"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="folder">folder</span>
-            <span className="font-body-md text-body-md">Categories</span>
-          </Link>
-          {/* Trash */}
-          <Link
-            href="#"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="delete">delete</span>
-            <span className="font-body-md text-body-md">Trash</span>
-          </Link>
-        </nav>
-        
-        <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
-          <Link
-            href="#"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="font-body-md text-body-md">Settings</span>
-          </Link>
 
-          <button
-            onClick={() => {
-              localStorage.removeItem('access_token');
-              router.push('/login');
-            }}
-            className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full"
-          >
-            <span className="material-symbols-outlined" data-icon="logout">logout</span>
-            <span className="font-body-md text-body-md">Đăng xuất</span>
-          </button>
-
-          <div className="mt-sm flex items-center gap-md px-sm">
-            <img
-              alt="User profile"
-              className="w-10 h-10 rounded-full border border-outline-variant object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEuAQ09psFDlyycKDJi7JeDK4GvZ_85cEWo5-vKIXOdo7L1tRiFFAOufOPedpfP4qlSeQRMemYRguQ4_mEcwodm4PsCGu3qwAetvl7ec0wHuseNBLnPcR219p1wAAkcRgwofG9ARpR4nUN4PkbvxD1tsvDtepdAKRCiSKWeYLygyCcJkQlhnp2_MTwFnboCJOS6f6QEbxvEbrSq77JTI5bh3vu527RmyxKH6qj6pToU1wPQS24tVVC2LhYxRsDyUBp07lNY19j-CUv"
-            />
-            <div>
-              <p className="font-bold text-[14px]">Minh Quân</p>
-              <p className="text-[12px] text-on-surface-variant">Pro Plan</p>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content Canvas */}
       <main className="flex-grow flex flex-col h-full bg-background overflow-hidden relative">
@@ -233,21 +172,7 @@ export default function AllNotesPage() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-md">
-            <button className="p-sm text-on-surface-variant hover:bg-surface-container rounded-full transition-colors">
-              <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-            </button>
-            <button className="p-sm text-on-surface-variant hover:bg-surface-container rounded-full transition-colors">
-              <span className="material-symbols-outlined" data-icon="help">help</span>
-            </button>
-            <div className="h-8 w-8 rounded-full bg-secondary-container overflow-hidden border border-outline-variant">
-              <img
-                alt="User profile"
-                className="h-full w-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj6bCBrdj3qPR2KE01j1nTZJLMtuduuc5l5dR9zV-3yQEXf4wWmpC8JYCLM9lc1AVB2pr-fJlkOzPvOwYz_Jhz1CADK6sW16ihyL7opr-WV9oCHnbzat7ltQjoL2cGP1zjjLJZpcHoeWbCsyXIcznxKJWbaLml6CG6bXSeh9ZLRtZ0WDa87lRkPMfE-G9PDKnV8RSDn5wDCU7928TJGF6mKxYelB94yUNwyhgSntM8UZ2FiDHq7sUscDdO9giSqHNpW7Ut8kU4MVn1"
-              />
-            </div>
-          </div>
+          <TopBarActions />
         </header>
 
         {/* Grid Header Actions */}
@@ -274,7 +199,7 @@ export default function AllNotesPage() {
                 <span className="material-symbols-outlined" data-icon="view_list">view_list</span>
               </button>
             </div>
-            
+
             {/* Sorting Trigger */}
             <div className="relative">
               <button
@@ -359,9 +284,18 @@ export default function AllNotesPage() {
 
                     <div className="flex justify-between items-center text-outline text-label-md pt-sm border-t border-outline-variant/10">
                       <span>{new Date(note.createdAt).toLocaleDateString('vi-VN')}</span>
-                      <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity text-[18px] text-primary" data-icon="arrow_forward">
-                        arrow_forward
-                      </span>
+                      <div className="flex items-center gap-xs">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-xs rounded-lg hover:bg-error-container text-outline hover:text-error"
+                          title="Xóa ghi chú"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                        <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity text-[18px] text-primary" data-icon="arrow_forward">
+                          arrow_forward
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -399,8 +333,8 @@ export default function AllNotesPage() {
               const displayCount = count < 10 ? `0${count}` : `${count}`;
               const icon = cat.icon || 'folder';
               return (
-                <label 
-                  key={cat.id} 
+                <label
+                  key={cat.id}
                   className={`flex items-center justify-between px-md py-sm rounded-xl cursor-pointer transition-all duration-200 group border ${isChecked ? 'bg-primary-fixed border-primary text-on-primary-fixed font-bold shadow-sm' : 'bg-surface-container-lowest border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-low hover:border-outline-variant'}`}
                 >
                   <input
@@ -501,8 +435,8 @@ export default function AllNotesPage() {
               { label: '30 ngày qua', icon: 'calendar_month', isSelected: false }
             ].map((item) => {
               return (
-                <button 
-                  key={item.label} 
+                <button
+                  key={item.label}
                   className={`w-full flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 text-left cursor-pointer border ${item.isSelected ? 'bg-primary-container/20 text-primary font-bold border-primary pl-[12px]' : 'bg-surface-container-lowest border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-low hover:border-outline-variant'}`}
                 >
                   <span className={`material-symbols-outlined text-[18px] ${item.isSelected ? 'text-primary' : 'text-outline'}`} data-icon={item.icon}>

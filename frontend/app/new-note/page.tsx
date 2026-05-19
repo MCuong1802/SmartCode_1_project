@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Sidebar from '../components/Sidebar';
+import TopBarActions from '../components/TopBarActions';
 
 export default function NewNotePage() {
   const router = useRouter();
@@ -83,35 +85,36 @@ export default function NewNotePage() {
 
     setIsSaving(true);
     setSaveStatus('Đang lưu...');
-    
-    fetch('http://localhost:3001/notes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        title: title.trim(),
-        content: content.trim(),
-        categoryId: selectedCategoryId || undefined
-      })
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to save');
-        return res.json();
-      })
-      .then(() => {
-        setIsSaving(false);
-        setSaveStatus('Đã lưu thành công!');
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
-      })
-      .catch(err => {
-        console.error('Error saving note:', err);
-        setIsSaving(false);
-        setSaveStatus('Lỗi khi lưu!');
+
+    try {
+      const res = await fetch('http://localhost:3001/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          categoryId: selectedCategoryId || undefined,
+        }),
       });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        const msg = errBody?.message || `Lỗi ${res.status}`;
+        throw new Error(msg);
+      }
+
+      setIsSaving(false);
+      setSaveStatus('Đã lưu thành công!');
+      setTimeout(() => router.push('/'), 1000);
+    } catch (err: any) {
+      console.error('Error saving note:', err);
+      setIsSaving(false);
+      setSaveStatus(`Lỗi: ${err.message}`);
+      alert(`Không thể lưu ghi chú: ${err.message}`);
+    }
   };
 
   const handleAddTag = (e: React.FormEvent) => {
@@ -137,89 +140,7 @@ export default function NewNotePage() {
 
   return (
     <div className="bg-background text-on-surface flex h-screen overflow-hidden font-body-md antialiased w-full">
-      {/* Sidebar Navigation */}
-      <aside className="w-[260px] h-screen sticky top-0 left-0 border-r border-outline-variant bg-surface hidden md:flex flex-col p-md shrink-0">
-        <div className="mb-xl px-sm">
-          <h1 className="font-bold text-primary text-[20px] leading-[28px]">NotesApp</h1>
-          <p className="text-[14px] leading-[20px] text-on-surface-variant">Personal Workspace</p>
-        </div>
-        
-        <Link
-          href="/new-note"
-          className="mb-lg flex items-center justify-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95 shadow-sm text-center"
-        >
-          <span className="material-symbols-outlined" data-icon="add">add</span>
-          <span className="text-[14px]">New Note</span>
-        </Link>
-        
-        <nav className="flex flex-col gap-base flex-grow">
-          {/* Dashboard */}
-          <Link
-            href="/"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="grid_view">grid_view</span>
-            <span className="font-body-md text-body-md">Dashboard</span>
-          </Link>
-          {/* All Notes */}
-          <Link
-            href="/all-notes"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="description">description</span>
-            <span className="font-body-md text-body-md">All Notes</span>
-          </Link>
-          {/* Categories */}
-          <Link
-            href="/categories"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="folder">folder</span>
-            <span className="font-body-md text-body-md">Categories</span>
-          </Link>
-          {/* Trash */}
-          <Link
-            href="#"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="delete">delete</span>
-            <span className="font-body-md text-body-md">Trash</span>
-          </Link>
-        </nav>
-        
-        <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
-          <Link
-            href="#"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="font-body-md text-body-md">Settings</span>
-          </Link>
-
-          <button
-            onClick={() => {
-              localStorage.removeItem('access_token');
-              router.push('/login');
-            }}
-            className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full"
-          >
-            <span className="material-symbols-outlined" data-icon="logout">logout</span>
-            <span className="font-body-md text-body-md">Đăng xuất</span>
-          </button>
-
-          <div className="mt-sm flex items-center gap-md px-sm">
-            <img
-              alt="User profile"
-              className="w-10 h-10 rounded-full border border-outline-variant object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEuAQ09psFDlyycKDJi7JeDK4GvZ_85cEWo5-vKIXOdo7L1tRiFFAOufOPedpfP4qlSeQRMemYRguQ4_mEcwodm4PsCGu3qwAetvl7ec0wHuseNBLnPcR219p1wAAkcRgwofG9ARpR4nUN4PkbvxD1tsvDtepdAKRCiSKWeYLygyCcJkQlhnp2_MTwFnboCJOS6f6QEbxvEbrSq77JTI5bh3vu527RmyxKH6qj6pToU1wPQS24tVVC2LhYxRsDyUBp07lNY19j-CUv"
-            />
-            <div>
-              <p className="font-bold text-[14px]">Minh Quân</p>
-              <p className="text-[12px] text-on-surface-variant">Pro Plan</p>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Workspace */}
       <main className="flex-grow flex flex-col h-screen overflow-hidden bg-background relative min-w-0">
@@ -246,21 +167,12 @@ export default function NewNotePage() {
               <span>{isSaving ? 'Đang lưu...' : 'Lưu ghi chú'}</span>
             </button>
             <button className="text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button className="text-on-surface-variant hover:text-primary transition-colors">
               <span className="material-symbols-outlined">share</span>
             </button>
             <button className="text-on-surface-variant hover:text-primary transition-colors">
               <span className="material-symbols-outlined">more_vert</span>
             </button>
-            <div className="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
-              <img
-                alt="User profile"
-                className="h-full w-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt5H64bMnEQEaAvE30KStmv4uL5BfkE3R8UY62EX9tF_Le2obPAka_QNCKfEEcit_yOd94f4ZLKXfpNaPdpwRm10Qk2IFoMDC7c-GKb8doov5TqSYvmJrBbklFHPUzVOVk8ktxikasZFPFcJCIUqunAlmo6Qeg47WRFRY2aPtsrwbtv63cCR3jzcP_E08GAx9-DnwWaEITdgYKgXxyzpWCC3brLefDxpzWsoeNxeVUUHsTTysOqWcI3M9bl77yO38RBWGPCnyPgK2E"
-              />
-            </div>
+            <TopBarActions />
           </div>
         </header>
 
@@ -348,7 +260,7 @@ export default function NewNotePage() {
             {/* Tag Manager */}
             <div className="mt-2xl pt-lg border-t border-outline-variant flex flex-wrap items-center gap-sm">
               <span className="font-label-md text-label-md text-on-surface-variant mr-xs">Nhãn:</span>
-              
+
               {tags.map((tag) => (
                 <div
                   key={tag}

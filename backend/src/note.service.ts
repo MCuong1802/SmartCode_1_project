@@ -14,7 +14,7 @@ export class NoteService {
     private userRepo: Repository<User>,
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
-  ) {}
+  ) { }
 
   async findAll(userId: string): Promise<Note[]> {
     return this.noteRepo.find({
@@ -32,7 +32,7 @@ export class NoteService {
     if (!user) {
       throw new NotFoundException('Không tìm thấy tài khoản người dùng!');
     }
-    
+
     let category: Category | null = null;
     if (data.categoryId) {
       category = await this.categoryRepo.findOne({
@@ -56,6 +56,33 @@ export class NoteService {
     if (!note) {
       throw new NotFoundException('Không tìm thấy ghi chú để xóa!');
     }
+    await this.noteRepo.softRemove(note);
+  }
+
+  async findTrash(userId: string): Promise<Note[]> {
+    return this.noteRepo.find({
+      where: { user: { id: userId } },
+      relations: ['category'],
+      withDeleted: true,
+      order: { deletedAt: 'DESC' },
+    }).then(notes => notes.filter(n => n.deletedAt != null));
+  }
+
+  async restore(userId: string, id: string): Promise<void> {
+    const note = await this.noteRepo.findOne({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
+    if (!note) throw new NotFoundException('Không tìm thấy ghi chú!');
+    await this.noteRepo.recover(note);
+  }
+
+  async deletePermanent(userId: string, id: string): Promise<void> {
+    const note = await this.noteRepo.findOne({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
+    if (!note) throw new NotFoundException('Không tìm thấy ghi chú!');
     await this.noteRepo.remove(note);
   }
 }

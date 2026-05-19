@@ -1,11 +1,12 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
-  ManyToOne, 
-  JoinColumn 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  ManyToOne,
+  JoinColumn
 } from 'typeorm';
 import { User } from './user.entity';
 import { Category } from './category.entity';
@@ -27,9 +28,12 @@ export class Note {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt?: Date;
+
   // Thiết lập mối quan hệ: Nhiều Notes thuộc về 1 User
   @ManyToOne(() => User, (user) => user.notes)
-  @JoinColumn({ name: 'user_id' }) // Chỉ định cột khóa ngoại trong pgAdmin
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
   // Thiết lập mối quan hệ: Nhiều Notes thuộc về 1 Category

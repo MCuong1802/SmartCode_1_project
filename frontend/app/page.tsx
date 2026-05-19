@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Sidebar from './components/Sidebar';
+import TopBarActions from './components/TopBarActions';
 
 export default function HomePage() {
   const router = useRouter();
@@ -43,6 +45,8 @@ export default function HomePage() {
         }
       })
       .catch(err => console.error('Error fetching categories:', err));
+
+    return () => { };
   }, [router]);
 
   // Trong lúc đang kiểm tra token, hiển thị màn hình trống hoặc loading để tránh nháy giao diện
@@ -53,88 +57,7 @@ export default function HomePage() {
   return (
     <div className="bg-background text-on-surface flex h-screen overflow-hidden font-body-md antialiased w-full">
       {/* Sidebar Navigation */}
-      <aside className="w-[260px] h-screen sticky top-0 left-0 border-r border-outline-variant bg-surface hidden md:flex flex-col p-md shrink-0">
-        <div className="mb-xl px-sm">
-          <h1 className="font-bold text-primary text-[20px] leading-[28px]">NotesApp</h1>
-          <p className="text-[14px] leading-[20px] text-on-surface-variant">Personal Workspace</p>
-        </div>
-        
-        <Link
-          href="/new-note"
-          className="mb-lg flex items-center justify-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95 shadow-sm text-center"
-        >
-          <span className="material-symbols-outlined" data-icon="add">add</span>
-          <span className="text-[14px]">New Note</span>
-        </Link>
-        
-        <nav className="flex flex-col gap-base flex-grow">
-          {/* Dashboard */}
-          <Link
-            href="/"
-            className="flex items-center gap-md px-md py-sm bg-primary-fixed text-on-primary-fixed rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="grid_view">grid_view</span>
-            <span className="font-body-md text-body-md">Dashboard</span>
-          </Link>
-          {/* All Notes */}
-          <Link
-            href="/all-notes"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="description">description</span>
-            <span className="font-body-md text-body-md">All Notes</span>
-          </Link>
-          {/* Categories */}
-          <Link
-            href="/categories"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="folder">folder</span>
-            <span className="font-body-md text-body-md">Categories</span>
-          </Link>
-          {/* Trash */}
-          <Link
-            href="#"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="delete">delete</span>
-            <span className="font-body-md text-body-md">Trash</span>
-          </Link>
-        </nav>
-        
-        <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
-          <Link
-            href="#"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
-          >
-            <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="font-body-md text-body-md">Settings</span>
-          </Link>
-
-          <button
-            onClick={() => {
-              localStorage.removeItem('access_token');
-              router.push('/login');
-            }}
-            className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full"
-          >
-            <span className="material-symbols-outlined" data-icon="logout">logout</span>
-            <span className="font-body-md text-body-md">Đăng xuất</span>
-          </button>
-
-          <div className="mt-sm flex items-center gap-md px-sm">
-            <img
-              alt="User profile"
-              className="w-10 h-10 rounded-full border border-outline-variant object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEuAQ09psFDlyycKDJi7JeDK4GvZ_85cEWo5-vKIXOdo7L1tRiFFAOufOPedpfP4qlSeQRMemYRguQ4_mEcwodm4PsCGu3qwAetvl7ec0wHuseNBLnPcR219p1wAAkcRgwofG9ARpR4nUN4PkbvxD1tsvDtepdAKRCiSKWeYLygyCcJkQlhnp2_MTwFnboCJOS6f6QEbxvEbrSq77JTI5bh3vu527RmyxKH6qj6pToU1wPQS24tVVC2LhYxRsDyUBp07lNY19j-CUv"
-            />
-            <div>
-              <p className="font-bold text-[14px]">Minh Quân</p>
-              <p className="text-[12px] text-on-surface-variant">Pro Plan</p>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content Area */}
       <main className="flex-grow flex flex-col h-screen overflow-hidden bg-background relative min-w-0">
@@ -151,19 +74,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="flex items-center gap-md ml-lg">
-            <button className="p-sm text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-            </button>
-            <button className="p-sm text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined" data-icon="help">help</span>
-            </button>
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant bg-secondary-container flex justify-center items-center shadow-sm">
-              <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80" 
-                alt="User profile" 
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <TopBarActions />
           </div>
         </header>
 
@@ -230,7 +141,7 @@ export default function HomePage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-lg">
                   {notes.slice(0, 2).map((note) => (
-                    <div 
+                    <div
                       key={note.id}
                       onClick={() => router.push('/all-notes')}
                       className="bg-surface-container-lowest border-l-4 border-l-primary border border-outline-variant p-lg rounded-lg shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all cursor-pointer flex flex-col min-h-[140px]"
@@ -253,7 +164,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-              {/* Recent Notes */}
+
               <section className="mb-2xl">
                 <div className="flex items-center justify-between mb-lg">
                   <h3 className="font-headline-sm text-headline-sm flex items-center gap-sm">
@@ -268,10 +179,10 @@ export default function HomePage() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
                   {notes.slice(0, 3).map((note) => (
-                    <div 
+                    <div
                       key={note.id}
                       onClick={() => router.push('/all-notes')}
                       className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:translate-y-[-2px] transition-all cursor-pointer flex flex-col p-lg min-h-[160px]"

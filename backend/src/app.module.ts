@@ -8,8 +8,7 @@ import { Category } from './category.entity';
 import { AuthModule } from './auth/auth.module';
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
-import { NoteController } from './note.controller';
-import { NoteService } from './note.service';
+import { NoteModule } from './note/note.module';
 
 
 @Module({
@@ -19,15 +18,16 @@ import { NoteService } from './note.service';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: '123',
+      password: '123456',
       database: 'demo1',
       entities: [User, Note, Category],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User, Category, Note]),
+    TypeOrmModule.forFeature([User, Category]),
     AuthModule,
+    NoteModule,
   ],
-  controllers: [AppController, CategoryController, NoteController],
-  providers: [AppService, CategoryService, NoteService],
+  controllers: [AppController, CategoryController],
+  providers: [AppService, CategoryService],
 })
-export class AppModule {}
+export class AppModule { }
