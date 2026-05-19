@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // States quản lý dữ liệu cá nhân thật từ database
   const [fullName, setFullName] = useState('');
@@ -18,6 +19,21 @@ export default function SettingsPage() {
 
   // States quản lý giao diện/theme
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('main-search-input');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Kiểm tra xác thực & Tải thông tin cá nhân thực tế
   useEffect(() => {
@@ -134,103 +150,145 @@ export default function SettingsPage() {
   return (
     <div className="bg-background text-on-surface flex h-screen overflow-hidden font-body-md antialiased w-full">
       {/* Sidebar Navigation (Desktop) */}
-      <aside className="hidden md:flex flex-col h-screen sticky top-0 left-0 border-r border-outline-variant bg-surface w-[260px] p-md shrink-0">
-        <div className="mb-xl px-md">
-          <h1 className="font-headline-sm text-headline-sm font-bold text-primary">NotesApp</h1>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Không gian làm việc</p>
+      <aside className="w-[260px] h-screen sticky top-0 left-0 border-r border-outline-variant bg-surface hidden md:flex flex-col p-md shrink-0">
+        <div className="mb-xl px-sm">
+          <h1 className="font-bold text-primary text-[20px] leading-[28px]">NotesApp</h1>
+          <p className="text-[14px] leading-[20px] text-on-surface-variant">Không gian làm việc</p>
         </div>
-        <nav className="flex-1 space-y-xs">
+ 
+        <Link
+          href="/new-note"
+          className="mb-lg flex items-center justify-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95 shadow-sm text-center cursor-pointer"
+        >
+          <span className="material-symbols-outlined" data-icon="add">add</span>
+          <span className="text-[14px]">Viết ghi chú mới</span>
+        </Link>
+ 
+        <nav className="flex flex-col gap-base flex-grow">
+          {/* Dashboard */}
           <Link
             href="/"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors group"
+            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 cursor-pointer"
           >
-            <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+            <span className="material-symbols-outlined" data-icon="grid_view">grid_view</span>
             <span className="font-body-md text-body-md">Bảng điều khiển</span>
           </Link>
+          {/* All Notes */}
           <Link
             href="/all-notes"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors group"
+            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 cursor-pointer"
           >
             <span className="material-symbols-outlined" data-icon="description">description</span>
             <span className="font-body-md text-body-md">Tất cả ghi chú</span>
           </Link>
+          {/* Categories */}
           <Link
             href="/categories"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors group"
+            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 cursor-pointer"
           >
             <span className="material-symbols-outlined" data-icon="folder">folder</span>
             <span className="font-body-md text-body-md">Danh mục</span>
           </Link>
+          {/* Trash */}
           <Link
-            href="#"
-            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors group"
+            href="/trash"
+            className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 cursor-pointer"
           >
             <span className="material-symbols-outlined" data-icon="delete">delete</span>
             <span className="font-body-md text-body-md">Thùng rác</span>
           </Link>
+        </nav>
+ 
+        <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
           <Link
             href="/settings"
-            className="flex items-center gap-md px-md py-sm bg-primary-fixed text-on-primary-fixed rounded-lg font-bold"
+            className="flex items-center gap-md px-md py-sm bg-primary-fixed text-on-primary-fixed rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95 cursor-pointer"
           >
-            <span className="material-symbols-outlined" data-icon="settings">settings</span>
+            <span className="material-symbols-outlined" data-icon="settings" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
             <span className="font-body-md text-body-md">Cài đặt</span>
           </Link>
-        </nav>
-        
-        <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
+ 
           <button
-            onClick={() => {
-              localStorage.removeItem('access_token');
-              router.push('/login');
-            }}
-            className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full cursor-pointer"
           >
             <span className="material-symbols-outlined" data-icon="logout">logout</span>
             <span className="font-body-md text-body-md">Đăng xuất</span>
           </button>
-          
+ 
           <div className="mt-sm flex items-center gap-md px-sm">
             <img
-              alt="User profile"
+              alt="Ảnh hồ sơ"
               className="w-10 h-10 rounded-full border border-outline-variant object-cover"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEuAQ09psFDlyycKDJi7JeDK4GvZ_85cEWo5-vKIXOdo7L1tRiFFAOufOPedpfP4qlSeQRMemYRguQ4_mEcwodm4PsCGu3qwAetvl7ec0wHuseNBLnPcR219p1wAAkcRgwofG9ARpR4nUN4PkbvxD1tsvDtepdAKRCiSKWeYLygyCcJkQlhnp2_MTwFnboCJOS6f6QEbxvEbrSq77JTI5bh3vu527RmyxKH6qj6pToU1wPQS24tVVC2LhYxRsDyUBp07lNY19j-CUv"
             />
             <div>
-              <p className="font-label-md text-label-md font-bold text-on-surface line-clamp-1">{originalName || 'Minh Nguyễn'}</p>
-              <p className="font-label-md text-label-md text-on-surface-variant">Gói Pro</p>
+              <p className="font-bold text-[14px]">{originalName || 'Minh Quân'}</p>
+              <p className="text-[12px] text-on-surface-variant">Gói Pro</p>
             </div>
           </div>
         </div>
       </aside>
-
-      {/* Top NavBar (Mobile) */}
-      <header className="md:hidden flex justify-between items-center w-full px-lg py-sm sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm absolute top-0 left-0 right-0">
-        <h1 className="font-headline-md text-headline-md font-black text-primary">NotesApp</h1>
-        <div className="flex items-center gap-md">
-          <span className="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
-          <img
-            alt="User profile"
-            className="w-8 h-8 rounded-full border border-outline-variant object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEuAQ09psFDlyycKDJi7JeDK4GvZ_85cEWo5-vKIXOdo7L1tRiFFAOufOPedpfP4qlSeQRMemYRguQ4_mEcwodm4PsCGu3qwAetvl7ec0wHuseNBLnPcR219p1wAAkcRgwofG9ARpR4nUN4PkbvxD1tsvDtepdAKRCiSKWeYLygyCcJkQlhnp2_MTwFnboCJOS6f6QEbxvEbrSq77JTI5bh3vu527RmyxKH6qj6pToU1wPQS24tVVC2LhYxRsDyUBp07lNY19j-CUv"
-          />
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-[800px] mx-auto px-margin-mobile md:px-margin-desktop py-xl overflow-y-auto custom-scrollbar h-screen">
-        <div className="mb-2xl mt-12 md:mt-0">
-          <h2 className="font-headline-lg text-headline-lg text-on-surface mb-xs font-bold">Cài đặt</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant">Quản lý tài khoản và tùy chỉnh trải nghiệm ứng dụng của bạn.</p>
-        </div>
-
-        {saveStatus && (
-          <div className="mb-lg p-md bg-primary-container text-white font-bold rounded-xl shadow-md flex items-center gap-sm animate-in fade-in slide-in-from-top-4 duration-300">
-            <span className="material-symbols-outlined">info</span>
-            <span>{saveStatus}</span>
+ 
+      {/* Main Workspace */}
+      <main className="flex-grow flex flex-col h-screen overflow-hidden bg-background relative min-w-0">
+        {/* Top Navigation Bar */}
+        <header className="sticky top-0 z-50 flex justify-between items-center w-full px-lg py-sm bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm shrink-0">
+          <div className="flex items-center gap-md flex-grow max-w-3xl">
+            <div className="relative w-full">
+              <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+              <input
+                id="main-search-input"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-sm pl-[44px] pr-[70px] text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Tìm kiếm ghi chú..."
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    router.push(`/all-notes?q=${encodeURIComponent(searchQuery.trim())}`);
+                  }
+                }}
+              />
+              <kbd className="absolute right-md top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-xs px-2 py-0.5 text-[10px] font-bold text-outline border border-outline-variant/60 bg-surface rounded shadow-sm select-none pointer-events-none">
+                <span>Ctrl</span>
+                <span>K</span>
+              </kbd>
+            </div>
           </div>
-        )}
+          <div className="flex items-center gap-md ml-lg">
+            <button className="p-sm text-on-surface-variant hover:text-primary transition-colors">
+              <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+            <button className="p-sm text-on-surface-variant hover:text-primary transition-colors">
+              <span className="material-symbols-outlined" data-icon="help">help</span>
+            </button>
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant bg-secondary-container flex justify-center items-center shadow-sm">
+              <img 
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80" 
+                alt="Ảnh hồ sơ" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        </header>
 
-        <div className="space-y-xl pb-24">
+        {/* Scrollable content */}
+        <div className="flex-grow overflow-y-auto p-xl scroll-smooth custom-scrollbar">
+          <div className="max-w-[800px] mx-auto w-full">
+            <header className="flex flex-col gap-xs mb-xl">
+              <h2 className="font-bold text-primary text-[30px] leading-[38px] tracking-[-0.02em]">Cài đặt</h2>
+              <p className="text-on-surface-variant text-[16px] leading-[24px]">Quản lý tài khoản và tùy chỉnh trải nghiệm ứng dụng của bạn.</p>
+            </header>
+
+            {saveStatus && (
+              <div className="mb-lg p-md bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bold rounded-xl shadow-sm flex items-center gap-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                <span>{saveStatus}</span>
+              </div>
+            )}
+
+            <div className="space-y-xl pb-24">
           {/* Profile Section */}
           <section className="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant transition-all hover:shadow-sm">
             <div className="flex items-center gap-lg mb-lg">
@@ -371,30 +429,64 @@ export default function SettingsPage() {
             {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </div>
-      </main>
+      </div>
+      </div>
+    </main>
 
-      {/* Bottom NavBar (Mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant flex justify-around py-sm z-50">
-        <Link href="/" className="flex flex-col items-center gap-xs text-on-surface-variant">
-          <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-          <span className="text-[10px] font-medium">Bảng</span>
+      {/* Floating navigation on mobile screen sizes */}
+      <div className="md:hidden fixed bottom-md left-md right-md h-16 bg-surface shadow-lg rounded-2xl flex items-center justify-around px-md border border-outline-variant z-50 animate-in slide-in-from-bottom duration-300">
+        <Link href="/" className="p-sm text-on-surface-variant flex flex-col items-center">
+          <span className="material-symbols-outlined" data-icon="grid_view">grid_view</span>
         </Link>
-        <Link href="/all-notes" className="flex flex-col items-center gap-xs text-on-surface-variant">
+        <Link href="/all-notes" className="p-sm text-on-surface-variant flex flex-col items-center">
           <span className="material-symbols-outlined" data-icon="description">description</span>
-          <span className="text-[10px] font-medium">Ghi chú</span>
         </Link>
-        <Link href="/new-note" className="w-12 h-12 -mt-6 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-all">
+        <Link
+          href="/new-note"
+          className="p-md bg-primary text-on-primary rounded-full -mt-12 shadow-lg ring-4 ring-background flex items-center justify-center active:scale-95 transition-all"
+        >
           <span className="material-symbols-outlined" data-icon="add">add</span>
         </Link>
-        <Link href="/categories" className="flex flex-col items-center gap-xs text-on-surface-variant">
+        <Link href="/categories" className="p-sm text-on-surface-variant flex flex-col items-center">
           <span className="material-symbols-outlined" data-icon="folder">folder</span>
-          <span className="text-[10px] font-medium">Kho</span>
         </Link>
-        <Link href="/settings" className="flex flex-col items-center gap-xs text-primary font-bold">
-          <span className="material-symbols-outlined" data-icon="settings">settings</span>
-          <span className="text-[10px] font-medium">Cài đặt</span>
+        <Link href="/settings" className="p-sm text-primary flex flex-col items-center">
+          <span className="material-symbols-outlined" data-icon="settings" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
         </Link>
-      </nav>
+      </div>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[99] flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm p-md animate-in fade-in duration-200">
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg max-w-[400px] w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-md text-error mb-md">
+              <span className="material-symbols-outlined text-[32px]">logout</span>
+              <h3 className="font-bold text-[20px] text-on-surface">Đăng xuất tài khoản</h3>
+            </div>
+            <p className="text-[15px] text-on-surface-variant leading-[24px] mb-lg">
+              Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng ghi chú? Bạn sẽ cần đăng nhập lại để truy cập lần sau.
+            </p>
+            <div className="flex gap-sm justify-end">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-md py-sm font-bold text-on-surface-variant hover:bg-surface-container rounded-xl transition-colors cursor-pointer text-[14px]"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('access_token');
+                  router.push('/login');
+                }}
+                className="px-md py-sm bg-error text-on-error font-bold rounded-xl hover:bg-error/95 active:scale-95 transition-all cursor-pointer text-[14px]"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

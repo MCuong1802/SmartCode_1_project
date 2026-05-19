@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not, IsNull, LessThan } from 'typeorm';
 import { Note } from './note.entity';
 import { User } from './user.entity';
 import { Category } from './category.entity';
@@ -56,7 +56,7 @@ export class NoteService {
     if (!note) {
       throw new NotFoundException('Không tìm thấy ghi chú để xóa!');
     }
-    await this.noteRepo.remove(note);
+    await this.noteRepo.softRemove(note);
   }
 
   async update(
@@ -97,5 +97,59 @@ export class NoteService {
       throw new NotFoundException('Không tìm thấy ghi chú!');
     }
     return note;
+  }
+
+  async cleanOldTrash(userId: string): Promise<void> {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const oldNotes = await this.noteRepo.find({
+      where: {
+        user: { id: userId },
+        deletedAt: LessThan(sevenDaysAgo),
+      },
+      withDeleted: true,
+    });
+
+    if (oldNotes.length > 0) {
+      await this.noteRepo.remove(oldNotes);
+    }
+  }
+
+  async findTrash(userId: string): Promise<Note[]> {
+    await this.cleanOldTrash(userId);
+
+    return this.noteRepo.find({
+      where: {
+        user: { id: userId },
+        deletedAt: Not(IsNull()),
+      },
+      withDeleted: true,
+      relations: ['category'],
+      order: { deletedAt: 'DESC' },
+    });
+  }
+
+  async restore(userId: string, id: string): Promise<Note> {
+    const note = await this.noteRepo.findOne({
+      where: { id, user: { id: userId }, deletedAt: Not(IsNull()) },
+      withDeleted: true,
+    });
+    if (!note) {
+      throw new NotFoundException('Không tìm thấy ghi chú trong thùng rác!');
+    }
+    note.deletedAt = undefined;
+    return this.noteRepo.save(note);
+  }
+
+  async forceDelete(userId: string, id: string): Promise<void> {
+    const note = await this.noteRepo.findOne({
+      where: { id, user: { id: userId }, deletedAt: Not(IsNull()) },
+      withDeleted: true,
+    });
+    if (!note) {
+      throw new NotFoundException('Không tìm thấy ghi chú trong thùng rác để xóa vĩnh viễn!');
+    }
+    await this.noteRepo.remove(note);
   }
 }

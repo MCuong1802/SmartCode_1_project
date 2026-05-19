@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from './auth/auth.guard';
 import { CategoryService } from './category.service';
 
@@ -28,6 +28,30 @@ export class CategoryController {
   ) {
     const userId = req.user.sub;
     return this.categoryService.create(userId, body);
+  }
+
+  @Get(':id')
+  async findOne(@Req() req: any, @Param('id') id: string) {
+    const userId = req.user.sub;
+    const cat = await this.categoryService.findOne(userId, id);
+    return {
+      id: cat.id,
+      title: cat.title,
+      description: cat.description,
+      icon: cat.icon,
+      colorName: cat.colorName,
+      notesCount: cat.notes?.length || 0,
+    };
+  }
+
+  @Put(':id')
+  async update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: { title?: string; description?: string; icon?: string; colorName?: string },
+  ) {
+    const userId = req.user.sub;
+    return this.categoryService.update(userId, id, body);
   }
 
   @Delete(':id')

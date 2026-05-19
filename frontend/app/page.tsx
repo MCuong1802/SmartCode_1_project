@@ -9,6 +9,8 @@ export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [notes, setNotes] = useState<any[]>([]);
   const [categoriesCount, setCategoriesCount] = useState(0);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Kiểm tra đăng nhập khi trang vừa load và fetch dữ liệu thật
   useEffect(() => {
@@ -45,6 +47,20 @@ export default function HomePage() {
       .catch(err => console.error('Error fetching categories:', err));
   }, [router]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('main-search-input');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Trong lúc đang kiểm tra token, hiển thị màn hình trống hoặc loading để tránh nháy giao diện
   if (!isAuthenticated) {
     return <div className="min-h-screen bg-background flex items-center justify-center font-body-md">Đang tải dữ liệu...</div>;
@@ -56,7 +72,7 @@ export default function HomePage() {
       <aside className="w-[260px] h-screen sticky top-0 left-0 border-r border-outline-variant bg-surface hidden md:flex flex-col p-md shrink-0">
         <div className="mb-xl px-sm">
           <h1 className="font-bold text-primary text-[20px] leading-[28px]">NotesApp</h1>
-          <p className="text-[14px] leading-[20px] text-on-surface-variant">Personal Workspace</p>
+          <p className="text-[14px] leading-[20px] text-on-surface-variant">Không gian làm việc</p>
         </div>
         
         <Link
@@ -64,7 +80,7 @@ export default function HomePage() {
           className="mb-lg flex items-center justify-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95 shadow-sm text-center"
         >
           <span className="material-symbols-outlined" data-icon="add">add</span>
-          <span className="text-[14px]">New Note</span>
+          <span className="text-[14px]">Viết ghi chú mới</span>
         </Link>
         
         <nav className="flex flex-col gap-base flex-grow">
@@ -74,7 +90,7 @@ export default function HomePage() {
             className="flex items-center gap-md px-md py-sm bg-primary-fixed text-on-primary-fixed rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined" data-icon="grid_view">grid_view</span>
-            <span className="font-body-md text-body-md">Dashboard</span>
+            <span className="font-body-md text-body-md">Bảng điều khiển</span>
           </Link>
           {/* All Notes */}
           <Link
@@ -82,7 +98,7 @@ export default function HomePage() {
             className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined" data-icon="description">description</span>
-            <span className="font-body-md text-body-md">All Notes</span>
+            <span className="font-body-md text-body-md">Tất cả ghi chú</span>
           </Link>
           {/* Categories */}
           <Link
@@ -90,15 +106,15 @@ export default function HomePage() {
             className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined" data-icon="folder">folder</span>
-            <span className="font-body-md text-body-md">Categories</span>
+            <span className="font-body-md text-body-md">Danh mục</span>
           </Link>
           {/* Trash */}
           <Link
-            href="#"
+            href="/trash"
             className="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined" data-icon="delete">delete</span>
-            <span className="font-body-md text-body-md">Trash</span>
+            <span className="font-body-md text-body-md">Thùng rác</span>
           </Link>
         </nav>
         
@@ -110,27 +126,24 @@ export default function HomePage() {
             <span className="material-symbols-outlined" data-icon="settings">settings</span>
             <span className="font-body-md text-body-md">Cài đặt</span>
           </Link>
-
+ 
           <button
-            onClick={() => {
-              localStorage.removeItem('access_token');
-              router.push('/login');
-            }}
-            className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full cursor-pointer"
           >
             <span className="material-symbols-outlined" data-icon="logout">logout</span>
             <span className="font-body-md text-body-md">Đăng xuất</span>
           </button>
-
+ 
           <div className="mt-sm flex items-center gap-md px-sm">
             <img
-              alt="User profile"
+              alt="Ảnh hồ sơ"
               className="w-10 h-10 rounded-full border border-outline-variant object-cover"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEuAQ09psFDlyycKDJi7JeDK4GvZ_85cEWo5-vKIXOdo7L1tRiFFAOufOPedpfP4qlSeQRMemYRguQ4_mEcwodm4PsCGu3qwAetvl7ec0wHuseNBLnPcR219p1wAAkcRgwofG9ARpR4nUN4PkbvxD1tsvDtepdAKRCiSKWeYLygyCcJkQlhnp2_MTwFnboCJOS6f6QEbxvEbrSq77JTI5bh3vu527RmyxKH6qj6pToU1wPQS24tVVC2LhYxRsDyUBp07lNY19j-CUv"
             />
             <div>
               <p className="font-bold text-[14px]">Minh Quân</p>
-              <p className="text-[12px] text-on-surface-variant">Pro Plan</p>
+              <p className="text-[12px] text-on-surface-variant">Gói Pro</p>
             </div>
           </div>
         </div>
@@ -140,14 +153,26 @@ export default function HomePage() {
       <main className="flex-grow flex flex-col h-screen overflow-hidden bg-background relative min-w-0">
         {/* Top Navigation Bar */}
         <header className="sticky top-0 z-50 flex justify-between items-center w-full px-lg py-sm bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm">
-          <div className="flex items-center gap-md flex-grow max-w-xl">
+          <div className="flex items-center gap-md flex-grow max-w-3xl">
             <div className="relative w-full">
               <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
               <input
-                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-sm pl-[44px] pr-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                placeholder="Tìm kiếm ghi chú... (⌘K)"
+                id="main-search-input"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-full py-sm pl-[44px] pr-[70px] text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Tìm kiếm ghi chú..."
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    router.push(`/all-notes?q=${encodeURIComponent(searchQuery.trim())}`);
+                  }
+                }}
               />
+              <kbd className="absolute right-md top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-xs px-2 py-0.5 text-[10px] font-bold text-outline border border-outline-variant/60 bg-surface rounded shadow-sm select-none pointer-events-none">
+                <span>Ctrl</span>
+                <span>K</span>
+              </kbd>
             </div>
           </div>
           <div className="flex items-center gap-md ml-lg">
@@ -160,7 +185,7 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant bg-secondary-container flex justify-center items-center shadow-sm">
               <img 
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80" 
-                alt="User profile" 
+                alt="Ảnh hồ sơ" 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -320,15 +345,45 @@ export default function HomePage() {
           <span className="material-symbols-outlined" data-icon="folder">folder</span>
         </Link>
         <button
-          onClick={() => {
-            localStorage.removeItem('access_token');
-            router.push('/login');
-          }}
-          className="p-sm text-error flex flex-col items-center"
+          onClick={() => setShowLogoutConfirm(true)}
+          className="p-sm text-error flex flex-col items-center cursor-pointer"
         >
           <span className="material-symbols-outlined" data-icon="logout">logout</span>
         </button>
       </div>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[99] flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm p-md animate-in fade-in duration-200">
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg max-w-[400px] w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-md text-error mb-md">
+              <span className="material-symbols-outlined text-[32px]">logout</span>
+              <h3 className="font-bold text-[20px] text-on-surface">Đăng xuất tài khoản</h3>
+            </div>
+            <p className="text-[15px] text-on-surface-variant leading-[24px] mb-lg">
+              Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng ghi chú? Bạn sẽ cần đăng nhập lại để truy cập lần sau.
+            </p>
+            <div className="flex gap-sm justify-end">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-md py-sm font-bold text-on-surface-variant hover:bg-surface-container rounded-xl transition-colors cursor-pointer text-[14px]"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('access_token');
+                  router.push('/login');
+                }}
+                className="px-md py-sm bg-error text-on-error font-bold rounded-xl hover:bg-error/95 active:scale-95 transition-all cursor-pointer text-[14px]"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -61,6 +61,40 @@ export class NoteController {
     };
   }
 
+  @Get('trash')
+  async findTrash(@Req() req: any) {
+    const userId = req.user.sub;
+    const notes = await this.noteService.findTrash(userId);
+    return notes.map((note) => ({
+      id: note.id,
+      title: note.title,
+      content: note.content,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+      deletedAt: note.deletedAt,
+      category: note.category ? {
+        id: note.category.id,
+        title: note.category.title,
+        colorName: note.category.colorName,
+        icon: note.category.icon,
+      } : null,
+    }));
+  }
+
+  @Put('trash/:id/restore')
+  async restore(@Req() req: any, @Param('id') id: string) {
+    const userId = req.user.sub;
+    await this.noteService.restore(userId, id);
+    return { message: 'Khôi phục ghi chú thành công!' };
+  }
+
+  @Delete('trash/:id/force')
+  async forceDelete(@Req() req: any, @Param('id') id: string) {
+    const userId = req.user.sub;
+    await this.noteService.forceDelete(userId, id);
+    return { message: 'Xóa vĩnh viễn ghi chú thành công!' };
+  }
+
   @Get(':id')
   async findOne(@Req() req: any, @Param('id') id: string) {
     const userId = req.user.sub;

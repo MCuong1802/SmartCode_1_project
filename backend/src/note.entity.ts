@@ -4,6 +4,7 @@ import {
   Column, 
   CreateDateColumn, 
   UpdateDateColumn, 
+  DeleteDateColumn,
   ManyToOne, 
   JoinColumn 
 } from 'typeorm';
@@ -36,4 +37,7 @@ export class Note {
   @ManyToOne(() => Category, (category) => category.notes, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'category_id' })
   category?: Category;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt?: Date;
 }

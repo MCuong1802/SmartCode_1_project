@@ -254,12 +254,12 @@ export default function RegisterPage() {
       <footer className="w-full py-lg px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-md border-t border-outline-variant bg-surface-bright mt-auto">
         <div className="flex flex-col md:flex-row items-center gap-lg">
           <span className="font-headline-sm text-headline-sm font-bold text-primary">NotesApp</span>
-          <span className="font-body-sm text-body-sm text-secondary">© 2024 NotesApp. All rights reserved.</span>
+          <span className="font-body-sm text-body-sm text-secondary">© 2024 NotesApp. Bảo lưu mọi quyền.</span>
         </div>
         <div className="flex gap-lg">
-          <a className="font-body-sm text-body-sm text-secondary hover:text-primary transition-colors" href="#">Terms</a>
-          <a className="font-body-sm text-body-sm text-secondary hover:text-primary transition-colors" href="#">Privacy</a>
-          <a className="font-body-sm text-body-sm text-secondary hover:text-primary transition-colors" href="#">Support</a>
+          <a className="font-body-sm text-body-sm text-secondary hover:text-primary transition-colors" href="#">Điều khoản</a>
+          <a className="font-body-sm text-body-sm text-secondary hover:text-primary transition-colors" href="#">Bảo mật</a>
+          <a className="font-body-sm text-body-sm text-secondary hover:text-primary transition-colors" href="#">Hỗ trợ</a>
         </div>
       </footer>
     </div>

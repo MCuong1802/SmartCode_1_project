@@ -197,7 +197,7 @@ export default function LoginPage() {
           {/* Contextual Illustration */}
           <div className="mt-xl flex justify-center opacity-20 grayscale pointer-events-none">
             <img
-              alt="Minimalist workspace"
+              alt="Không gian làm việc tối giản"
               className="w-32 h-auto object-contain rounded-lg"
               src="https://cdn-icons-png.flaticon.com/512/3209/3209265.png"
             />
@@ -212,12 +212,12 @@ export default function LoginPage() {
             NotesApp
           </div>
           <div className="flex gap-lg font-body-sm text-body-sm text-secondary">
-            <a className="hover:text-primary transition-colors" href="#">Terms</a>
-            <a className="hover:text-primary transition-colors" href="#">Privacy</a>
-            <a className="hover:text-primary transition-colors" href="#">Support</a>
+            <a className="hover:text-primary transition-colors" href="#">Điều khoản</a>
+            <a className="hover:text-primary transition-colors" href="#">Bảo mật</a>
+            <a className="hover:text-primary transition-colors" href="#">Hỗ trợ</a>
           </div>
           <div className="font-body-sm text-body-sm text-secondary">
-            © 2024 NotesApp. All rights reserved.
+            © 2024 NotesApp. Bảo lưu mọi quyền.
           </div>
         </div>
       </footer>
