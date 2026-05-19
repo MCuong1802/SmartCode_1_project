@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+
+
+
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+
+@layer utilities {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  .auth-card-shadow {
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@layer base {
+  body {
+    background-color: #f8f9ff;
+    color: #0b1c30;
+  }
+}
+
+/* Custom styles from mockup */
+.editor-container:focus-within .toolbar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2dfff;
+  border-radius: 10px;
+}

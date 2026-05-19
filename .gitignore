@@ -1,0 +1,46 @@
+# =========================
+# FRONTEND - NEXTJS
+# =========================
+
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# env
+frontend/.env
+frontend/.env.local
+
+# =========================
+# BACKEND - NESTJS
+# =========================
+
+backend/node_modules/
+backend/dist/
+
+# logs
+backend/logs
+backend/*.log
+backend/npm-debug.log*
+
+# env
+backend/.env
+
+# =========================
+# IDE
+# =========================
+
+.vscode/
+.idea/
+
+# =========================
+# OS
+# =========================
+
+.DS_Store
+Thumbs.db

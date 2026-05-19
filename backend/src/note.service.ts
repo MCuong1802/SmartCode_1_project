@@ -1,0 +1,61 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Note } from './note.entity';
+import { User } from './user.entity';
+import { Category } from './category.entity';
+
+@Injectable()
+export class NoteService {
+  constructor(
+    @InjectRepository(Note)
+    private noteRepo: Repository<Note>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
+    @InjectRepository(Category)
+    private categoryRepo: Repository<Category>,
+  ) {}
+
+  async findAll(userId: string): Promise<Note[]> {
+    return this.noteRepo.find({
+      where: { user: { id: userId } },
+      relations: ['category'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async create(
+    userId: string,
+    data: { title: string; content: string; categoryId?: string },
+  ): Promise<Note> {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy tài khoản người dùng!');
+    }
+    
+    let category: Category | null = null;
+    if (data.categoryId) {
+      category = await this.categoryRepo.findOne({
+        where: { id: data.categoryId, user: { id: userId } },
+      });
+    }
+
+    const note = this.noteRepo.create({
+      title: data.title,
+      content: data.content,
+      user,
+      category: category || undefined,
+    });
+    return this.noteRepo.save(note);
+  }
+
+  async delete(userId: string, id: string): Promise<void> {
+    const note = await this.noteRepo.findOne({
+      where: { id, user: { id: userId } },
+    });
+    if (!note) {
+      throw new NotFoundException('Không tìm thấy ghi chú để xóa!');
+    }
+    await this.noteRepo.remove(note);
+  }
+}
