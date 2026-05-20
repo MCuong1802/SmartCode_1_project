@@ -138,7 +138,7 @@ export class NoteService {
     if (!note) {
       throw new NotFoundException('Không tìm thấy ghi chú trong thùng rác!');
     }
-    note.deletedAt = undefined;
+    note.deletedAt = null as any;
     return this.noteRepo.save(note);
   }
 

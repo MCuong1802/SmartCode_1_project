@@ -122,6 +122,9 @@ export default function NewNotePage() {
   useEffect(() => {
     if (!isAuthenticated || !title.trim()) return;
 
+    // Không tự động lưu khi đang tạo mới (chưa có ID). Chờ người dùng lưu thủ công lần đầu.
+    if (!noteId) return;
+
     // Tránh lưu đè ngay lúc vừa load ghi chú cũ
     if (noteId && saveStatus === 'Ghi chú đã tải') {
       lastSavedTitleRef.current = title;
