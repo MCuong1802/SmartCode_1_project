@@ -1,8 +1,9 @@
 export const apiFetch = async (url: string, options: RequestInit = {}) => {
   let token = localStorage.getItem('access_token');
   
-  const opts = {
+  const opts: RequestInit = {
     ...options,
+    cache: options.cache || 'no-store', // Tắt cache mặc định để tránh dữ liệu cũ giữa các user
     headers: {
       ...options.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
