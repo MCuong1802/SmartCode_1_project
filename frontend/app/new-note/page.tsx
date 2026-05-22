@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '../utils/api';
 import Link from 'next/link';
 
 export default function NewNotePage() {
@@ -57,7 +58,7 @@ export default function NewNotePage() {
 
     setIsAuthenticated(true);
 
-    fetch('http://localhost:3001/categories', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -71,7 +72,7 @@ export default function NewNotePage() {
       })
       .catch(err => console.error('Error fetching categories:', err));
 
-    fetch('http://localhost:3001/notes', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -90,7 +91,7 @@ export default function NewNotePage() {
     if (!token) return;
 
     setSaveStatus('Đang tải ghi chú...');
-    fetch(`http://localhost:3001/notes/${noteId}`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/${noteId}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -161,12 +162,12 @@ export default function NewNotePage() {
 
       const currentNoteId = noteId;
       const url = currentNoteId 
-        ? `http://localhost:3001/notes/${currentNoteId}` 
-        : 'http://localhost:3001/notes';
+        ? `${process.env.NEXT_PUBLIC_API_URL}/notes/${currentNoteId}` 
+        : `${process.env.NEXT_PUBLIC_API_URL}/notes`;
       const method = currentNoteId ? 'PUT' : 'POST';
 
       try {
-        const res = await fetch(url, {
+        const res = await apiFetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json',
@@ -252,12 +253,12 @@ export default function NewNotePage() {
 
     const currentNoteId = noteId;
     const url = currentNoteId 
-      ? `http://localhost:3001/notes/${currentNoteId}` 
-      : 'http://localhost:3001/notes';
+      ? `${process.env.NEXT_PUBLIC_API_URL}/notes/${currentNoteId}` 
+      : `${process.env.NEXT_PUBLIC_API_URL}/notes`;
     const method = currentNoteId ? 'PUT' : 'POST';
     
     try {
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
@@ -698,7 +699,15 @@ export default function NewNotePage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+                      method: 'POST',
+                      credentials: 'include',
+                    });
+                  } catch (e) {
+                    console.error('Logout error', e);
+                  }
                   localStorage.removeItem('access_token');
                   router.push('/login');
                 }}

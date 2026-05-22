@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '../utils/api';
 import Link from 'next/link';
 
 interface NoteCard {
@@ -67,7 +68,7 @@ export default function AllNotesPage() {
     }
     const token = localStorage.getItem('access_token');
     try {
-      const res = await fetch(`http://localhost:3001/notes/${activeEditNote.id}`, {
+      const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/${activeEditNote.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ export default function AllNotesPage() {
     if (!activeDeleteId) return;
     const token = localStorage.getItem('access_token');
     try {
-      const res = await fetch(`http://localhost:3001/notes/${activeDeleteId}`, {
+      const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/${activeDeleteId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -139,7 +140,7 @@ export default function AllNotesPage() {
     }
 
     // Tải danh sách ghi chú
-    fetch('http://localhost:3001/notes', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -151,7 +152,7 @@ export default function AllNotesPage() {
       .catch(err => console.error('Error fetching notes:', err));
 
     // Tải danh sách danh mục
-    fetch('http://localhost:3001/categories', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -890,7 +891,15 @@ export default function AllNotesPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+                      method: 'POST',
+                      credentials: 'include',
+                    });
+                  } catch (e) {
+                    console.error('Logout error', e);
+                  }
                   localStorage.removeItem('access_token');
                   router.push('/login');
                 }}

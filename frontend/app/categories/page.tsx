@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '../utils/api';
 import Link from 'next/link';
 
 interface CategoryItem {
@@ -103,7 +104,7 @@ export default function CategoriesPage() {
     setIsAuthenticated(true);
 
     // Fetch categories
-    fetch('http://localhost:3001/categories', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -115,7 +116,7 @@ export default function CategoriesPage() {
       .catch(err => console.error('Error fetching categories:', err));
 
     // Fetch notes và cấu hình hoạt động gần đây
-    fetch('http://localhost:3001/notes', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -157,7 +158,7 @@ export default function CategoriesPage() {
     const token = localStorage.getItem('access_token');
     if (!token) return;
 
-    fetch('http://localhost:3001/categories', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -174,7 +175,7 @@ export default function CategoriesPage() {
         if (res.ok) {
           showToast('Thêm danh mục mới thành công!', 'success');
           // Tải lại danh sách danh mục sau khi thêm mới thành công
-          fetch('http://localhost:3001/categories', {
+          apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
             .then(res => res.json())
@@ -219,7 +220,7 @@ export default function CategoriesPage() {
     const token = localStorage.getItem('access_token');
     if (!token) return;
 
-    fetch(`http://localhost:3001/categories/${editingCategoryId}`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${editingCategoryId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -236,7 +237,7 @@ export default function CategoriesPage() {
         if (res.ok) {
           showToast('Cập nhật danh mục thành công!', 'success');
           // Tải lại danh sách danh mục sau khi cập nhật thành công
-          fetch('http://localhost:3001/categories', {
+          apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
             .then(res => res.json())
@@ -268,7 +269,7 @@ export default function CategoriesPage() {
         const token = localStorage.getItem('access_token');
         if (!token) return;
 
-        fetch(`http://localhost:3001/categories/${id}`, {
+        apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -873,7 +874,15 @@ export default function CategoriesPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+                      method: 'POST',
+                      credentials: 'include',
+                    });
+                  } catch (e) {
+                    console.error('Logout error', e);
+                  }
                   localStorage.removeItem('access_token');
                   router.push('/login');
                 }}

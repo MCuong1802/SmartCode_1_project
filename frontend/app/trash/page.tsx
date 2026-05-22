@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '../utils/api';
 import Link from 'next/link';
 
 export default function TrashPage() {
@@ -54,7 +55,7 @@ export default function TrashPage() {
     const token = localStorage.getItem('access_token');
     if (!token) return;
 
-    fetch('http://localhost:3001/notes/trash', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/trash`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then((res) => {
@@ -87,7 +88,7 @@ export default function TrashPage() {
     const token = localStorage.getItem('access_token');
     if (!token) return;
 
-    fetch(`http://localhost:3001/notes/trash/${id}/restore`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/trash/${id}/restore`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -114,7 +115,7 @@ export default function TrashPage() {
         const token = localStorage.getItem('access_token');
         if (!token) return;
 
-        fetch(`http://localhost:3001/notes/trash/${id}/force`, {
+        apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/trash/${id}/force`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -463,7 +464,15 @@ export default function TrashPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+                      method: 'POST',
+                      credentials: 'include',
+                    });
+                  } catch (e) {
+                    console.error('Logout error', e);
+                  }
                   localStorage.removeItem('access_token');
                   router.push('/login');
                 }}

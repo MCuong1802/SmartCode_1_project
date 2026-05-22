@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '../utils/api';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -52,7 +53,7 @@ export default function SettingsPage() {
     }
 
     // Gọi API lấy thông tin Profile thực tế
-    fetch('http://localhost:3001/user/profile', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/user/profile`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -109,7 +110,7 @@ export default function SettingsPage() {
     setSaveStatus('Đang lưu...');
 
     try {
-      const res = await fetch('http://localhost:3001/user/profile', {
+      const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -475,7 +476,15 @@ export default function SettingsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+                      method: 'POST',
+                      credentials: 'include',
+                    });
+                  } catch (e) {
+                    console.error('Logout error', e);
+                  }
                   localStorage.removeItem('access_token');
                   router.push('/login');
                 }}

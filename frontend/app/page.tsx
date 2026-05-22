@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from './utils/api';
 import Link from 'next/link';
+
+import LandingPage from './LandingPage';
 
 export default function HomePage() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [notes, setNotes] = useState<any[]>([]);
   const [categoriesCount, setCategoriesCount] = useState(0);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -16,14 +19,14 @@ export default function HomePage() {
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (!token) {
-      router.push('/login');
+      setIsAuthenticated(false);
       return;
     }
 
     setIsAuthenticated(true);
 
     // Fetch toàn bộ ghi chú thực tế của User
-    fetch('http://localhost:3001/notes', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -35,7 +38,7 @@ export default function HomePage() {
       .catch(err => console.error('Error fetching notes:', err));
 
     // Fetch toàn bộ danh mục thực tế của User
-    fetch('http://localhost:3001/categories', {
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -62,8 +65,13 @@ export default function HomePage() {
   }, []);
 
   // Trong lúc đang kiểm tra token, hiển thị màn hình trống hoặc loading để tránh nháy giao diện
-  if (!isAuthenticated) {
+  if (isAuthenticated === null) {
     return <div className="min-h-screen bg-background flex items-center justify-center font-body-md">Đang tải dữ liệu...</div>;
+  }
+
+  // Nếu không đăng nhập, hiển thị Landing Page
+  if (isAuthenticated === false) {
+    return <LandingPage />;
   }
 
   return (
@@ -372,7 +380,15 @@ export default function HomePage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+                      method: 'POST',
+                      credentials: 'include',
+                    });
+                  } catch (e) {
+                    console.error('Logout error', e);
+                  }
                   localStorage.removeItem('access_token');
                   router.push('/login');
                 }}
