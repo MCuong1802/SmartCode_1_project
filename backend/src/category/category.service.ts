@@ -2,7 +2,9 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './category.entity';
-import { User } from './user.entity';
+import { User } from '../user/user.entity';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoryService {
@@ -21,7 +23,7 @@ export class CategoryService {
     });
   }
 
-  async create(userId: string, data: { title: string; description?: string; icon?: string; colorName?: string }): Promise<Category> {
+  async create(userId: string, data: CreateCategoryDto): Promise<Category> {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user) {
       throw new NotFoundException('Không tìm thấy tài khoản người dùng!');
@@ -47,7 +49,7 @@ export class CategoryService {
   async update(
     userId: string,
     id: string,
-    data: { title?: string; description?: string; icon?: string; colorName?: string },
+    data: UpdateCategoryDto,
   ): Promise<Category> {
     const category = await this.categoryRepo.findOne({
       where: { id, user: { id: userId } },

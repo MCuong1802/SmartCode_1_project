@@ -2,8 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull, LessThan } from 'typeorm';
 import { Note } from './note.entity';
-import { User } from './user.entity';
-import { Category } from './category.entity';
+import { User } from '../user/user.entity';
+import { Category } from '../category/category.entity';
+import { CreateNoteDto } from './dto/create-note.dto';
+import { UpdateNoteDto } from './dto/update-note.dto';
 
 @Injectable()
 export class NoteService {
@@ -26,7 +28,7 @@ export class NoteService {
 
   async create(
     userId: string,
-    data: { title: string; content: string; categoryId?: string },
+    data: CreateNoteDto,
   ): Promise<Note> {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user) {
@@ -62,7 +64,7 @@ export class NoteService {
   async update(
     userId: string,
     id: string,
-    data: { title: string; content: string; categoryId?: string },
+    data: UpdateNoteDto,
   ): Promise<Note> {
     const note = await this.noteRepo.findOne({
       where: { id, user: { id: userId } },
@@ -83,8 +85,8 @@ export class NoteService {
       }
     }
 
-    note.title = data.title;
-    note.content = data.content;
+    if (data.title !== undefined) note.title = data.title;
+    if (data.content !== undefined) note.content = data.content;
     return this.noteRepo.save(note);
   }
 

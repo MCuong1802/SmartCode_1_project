@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '../utils/api';
+import { apiFetch } from '@/utils/api';
 import Link from 'next/link';
 
 export default function TrashPage() {
@@ -52,12 +52,7 @@ export default function TrashPage() {
 
   // Load Trash Notes
   const fetchTrashNotes = () => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/trash`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/trash`)
       .then((res) => {
         if (!res.ok) throw new Error('Không thể tải thùng rác');
         return res.json();
@@ -85,12 +80,8 @@ export default function TrashPage() {
 
   // Restore Note
   const handleRestoreNote = (id: string) => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
     apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/trash/${id}/restore`, {
-      method: 'PUT',
-      headers: { 'Authorization': `Bearer ${token}` }
+      method: 'PUT'
     })
       .then((res) => {
         if (res.ok) {
@@ -112,12 +103,8 @@ export default function TrashPage() {
       'Xóa vĩnh viễn ghi chú',
       'Bạn có chắc chắn muốn xóa vĩnh viễn ghi chú này? Hành động này KHÔNG THỂ khôi phục lại.',
       () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-
         apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/trash/${id}/force`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          method: 'DELETE'
         })
           .then((res) => {
             if (res.ok) {

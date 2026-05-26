@@ -1,15 +1,15 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
   DeleteDateColumn,
-  ManyToOne, 
-  JoinColumn 
+  ManyToOne,
+  JoinColumn
 } from 'typeorm';
-import { User } from './user.entity';
-import { Category } from './category.entity';
+import { User } from '../user/user.entity';
+import { Category } from '../category/category.entity';
 
 @Entity('notes')
 export class Note {

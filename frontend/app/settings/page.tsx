@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '../utils/api';
+import { apiFetch } from '@/utils/api';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -53,9 +53,7 @@ export default function SettingsPage() {
     }
 
     // Gọi API lấy thông tin Profile thực tế
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/user/profile`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/user/profile`)
       .then(res => {
         if (!res.ok) throw new Error('Không thể tải hồ sơ');
         return res.json();
@@ -103,9 +101,6 @@ export default function SettingsPage() {
       return;
     }
 
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
     setIsSaving(true);
     setSaveStatus('Đang lưu...');
 
@@ -113,8 +108,7 @@ export default function SettingsPage() {
       const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/user/profile`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           fullName: fullName.trim(),

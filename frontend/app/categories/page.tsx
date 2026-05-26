@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '../utils/api';
+import { apiFetch } from '@/utils/api';
 import Link from 'next/link';
 
 interface CategoryItem {
@@ -104,9 +104,7 @@ export default function CategoriesPage() {
     setIsAuthenticated(true);
 
     // Fetch categories
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -116,9 +114,7 @@ export default function CategoriesPage() {
       .catch(err => console.error('Error fetching categories:', err));
 
     // Fetch notes và cấu hình hoạt động gần đây
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -155,14 +151,10 @@ export default function CategoriesPage() {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
     apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         title: newTitle.trim(),
@@ -175,9 +167,7 @@ export default function CategoriesPage() {
         if (res.ok) {
           showToast('Thêm danh mục mới thành công!', 'success');
           // Tải lại danh sách danh mục sau khi thêm mới thành công
-          apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
+          apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
             .then(res => res.json())
             .then(data => {
               if (Array.isArray(data)) {
@@ -217,14 +207,10 @@ export default function CategoriesPage() {
     e.preventDefault();
     if (!editingCategoryId || !editTitle.trim()) return;
 
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
     apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${editingCategoryId}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         title: editTitle.trim(),
@@ -237,9 +223,7 @@ export default function CategoriesPage() {
         if (res.ok) {
           showToast('Cập nhật danh mục thành công!', 'success');
           // Tải lại danh sách danh mục sau khi cập nhật thành công
-          apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
+          apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
             .then(res => res.json())
             .then(data => {
               if (Array.isArray(data)) {
@@ -266,14 +250,8 @@ export default function CategoriesPage() {
       'Xóa danh mục',
       'Bạn có chắc chắn muốn xóa danh mục này? Lưu ý: Mọi ghi chú liên kết sẽ không bị xóa mà chỉ được chuyển về trạng thái Chưa phân loại.',
       () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-
         apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          method: 'DELETE'
         })
           .then(async (res) => {
             if (res.ok) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '../utils/api';
+import { apiFetch } from '@/utils/api';
 import Link from 'next/link';
 
 export default function NewNotePage() {
@@ -58,9 +58,7 @@ export default function NewNotePage() {
 
     setIsAuthenticated(true);
 
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -72,9 +70,7 @@ export default function NewNotePage() {
       })
       .catch(err => console.error('Error fetching categories:', err));
 
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -91,9 +87,7 @@ export default function NewNotePage() {
     if (!token) return;
 
     setSaveStatus('Đang tải ghi chú...');
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/${noteId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/${noteId}`)
       .then(res => {
         if (!res.ok) throw new Error('Không tìm thấy ghi chú');
         return res.json();
@@ -102,7 +96,7 @@ export default function NewNotePage() {
         setTitle(data.title);
         setContent(data.content);
         setCreatedAt(data.createdAt);
-        
+
         // Cập nhật refs gốc ngay khi vừa nạp dữ liệu xong
         lastSavedTitleRef.current = data.title;
         lastSavedContentRef.current = data.content;
@@ -161,8 +155,8 @@ export default function NewNotePage() {
       setSaveStatus('Đang lưu tự động...');
 
       const currentNoteId = noteId;
-      const url = currentNoteId 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/notes/${currentNoteId}` 
+      const url = currentNoteId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/notes/${currentNoteId}`
         : `${process.env.NEXT_PUBLIC_API_URL}/notes`;
       const method = currentNoteId ? 'PUT' : 'POST';
 
@@ -170,8 +164,7 @@ export default function NewNotePage() {
         const res = await apiFetch(url, {
           method,
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             title: title.trim(),
@@ -252,17 +245,16 @@ export default function NewNotePage() {
     setSaveStatus('Đang lưu...');
 
     const currentNoteId = noteId;
-    const url = currentNoteId 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/notes/${currentNoteId}` 
+    const url = currentNoteId
+      ? `${process.env.NEXT_PUBLIC_API_URL}/notes/${currentNoteId}`
       : `${process.env.NEXT_PUBLIC_API_URL}/notes`;
     const method = currentNoteId ? 'PUT' : 'POST';
-    
+
     try {
       const res = await apiFetch(url, {
         method: method,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           title: title.trim(),
@@ -272,7 +264,7 @@ export default function NewNotePage() {
       });
 
       if (!res.ok) throw new Error('Không thể lưu ghi chú');
-      
+
       const data = await res.json();
 
       // Cập nhật refs bản lưu
@@ -323,7 +315,7 @@ export default function NewNotePage() {
           <h1 className="font-bold text-primary text-[20px] leading-[28px]">NotesApp</h1>
           <p className="text-[14px] leading-[20px] text-on-surface-variant">Không gian làm việc</p>
         </div>
-        
+
         <Link
           href="/new-note"
           className="mb-lg flex items-center justify-center gap-sm px-md py-sm bg-primary text-on-primary rounded-lg font-bold transition-all duration-200 ease-in-out active:scale-95 shadow-sm text-center"
@@ -331,7 +323,7 @@ export default function NewNotePage() {
           <span className="material-symbols-outlined" data-icon="add">add</span>
           <span className="text-[14px]">Viết ghi chú mới</span>
         </Link>
-        
+
         <nav className="flex flex-col gap-base flex-grow">
           {/* Dashboard */}
           <Link
@@ -366,7 +358,7 @@ export default function NewNotePage() {
             <span className="font-body-md text-body-md">Thùng rác</span>
           </Link>
         </nav>
-        
+
         <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant shrink-0">
           <Link
             href="/settings"
@@ -375,7 +367,7 @@ export default function NewNotePage() {
             <span className="material-symbols-outlined" data-icon="settings">settings</span>
             <span className="font-body-md text-body-md">Cài đặt</span>
           </Link>
- 
+
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="flex items-center gap-md px-md py-sm text-error hover:bg-error-container rounded-lg transition-colors transition-all duration-200 ease-in-out active:scale-95 text-left w-full cursor-pointer"
@@ -383,7 +375,7 @@ export default function NewNotePage() {
             <span className="material-symbols-outlined" data-icon="logout">logout</span>
             <span className="font-body-md text-body-md">Đăng xuất</span>
           </button>
- 
+
           <div className="mt-sm flex items-center gap-md px-sm">
             <img
               alt="Ảnh hồ sơ"
@@ -397,7 +389,7 @@ export default function NewNotePage() {
           </div>
         </div>
       </aside>
- 
+
       {/* Main Workspace */}
       <main className="flex-grow flex flex-col h-screen overflow-hidden bg-background relative min-w-0">
         {/* Header/Top Nav */}
@@ -525,7 +517,7 @@ export default function NewNotePage() {
             {/* Tag Manager */}
             <div className="mt-2xl pt-lg border-t border-outline-variant flex flex-wrap items-center gap-sm">
               <span className="font-label-md text-label-md text-on-surface-variant mr-xs">Nhãn:</span>
-              
+
               {tags.map((tag) => (
                 <div
                   key={tag}

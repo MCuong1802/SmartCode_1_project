@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import { User } from '../user.entity';
+import { User } from '../user/user.entity';
 import { RefreshToken } from './refresh-token.entity';
 
 @Injectable()

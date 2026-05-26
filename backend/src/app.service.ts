@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User } from './user.entity';
+import { User } from './user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -25,13 +25,13 @@ export class AppService {
   }
 
   // Cập nhật thông tin cá nhân (Họ tên, Email)
-  async updateProfile(userId: string, fullName: string, email: string): Promise<User> {
+  async updateProfile(userId: string, fullName?: string, email?: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new Error('Không tìm thấy người dùng!');
     }
-    user.fullName = fullName;
-    user.email = email;
+    if (fullName !== undefined) user.fullName = fullName;
+    if (email !== undefined) user.email = email;
     return this.userRepository.save(user);
   }
 }

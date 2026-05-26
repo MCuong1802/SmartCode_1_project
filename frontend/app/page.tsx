@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from './utils/api';
+import { apiFetch } from '@/utils/api';
 import Link from 'next/link';
 
-import LandingPage from './LandingPage';
+import LandingPage from '@/components/LandingPage';
 
 export default function HomePage() {
   const router = useRouter();
@@ -26,9 +26,7 @@ export default function HomePage() {
     setIsAuthenticated(true);
 
     // Fetch toàn bộ ghi chú thực tế của User
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -38,9 +36,7 @@ export default function HomePage() {
       .catch(err => console.error('Error fetching notes:', err));
 
     // Fetch toàn bộ danh mục thực tế của User
-    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

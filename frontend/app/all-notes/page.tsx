@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '../utils/api';
+import { apiFetch } from '@/utils/api';
 import Link from 'next/link';
 
 interface NoteCard {
@@ -66,13 +66,11 @@ export default function AllNotesPage() {
       alert('Tiêu đề không được để trống!');
       return;
     }
-    const token = localStorage.getItem('access_token');
     try {
       const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL}/notes/${activeEditNote.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           title: editTitle.trim(),

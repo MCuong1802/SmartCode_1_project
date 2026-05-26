@@ -6,8 +6,8 @@ import {
   UpdateDateColumn, 
   OneToMany 
 } from 'typeorm';
-import { Note } from './note.entity';
-import { Category } from './category.entity';
+import { Note } from '../note/note.entity';
+import { Category } from '../category/category.entity';
 
 @Entity('users') // Tên bảng trong database
 export class User {

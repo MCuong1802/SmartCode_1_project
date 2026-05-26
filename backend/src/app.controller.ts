@@ -1,11 +1,13 @@
 import { Controller, Get, Put, Body, Req, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
-import { User } from './user.entity';
+import { User } from './user/user.entity';
 import { AuthGuard } from './auth/auth.guard';
+import type { RequestWithUser } from './auth/interfaces/request-with-user.interface';
+import { UpdateProfileDto } from './user/dto/update-profile.dto';
 
 @Controller('user')
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   @Get()
   async getUsers(): Promise<User[]> {
@@ -14,7 +16,7 @@ export class AppController {
 
   @Get('profile')
   @UseGuards(AuthGuard)
-  async getProfile(@Req() req: any) {
+  async getProfile(@Req() req: RequestWithUser) {
     const userId = req.user.sub;
     const user = await this.appService.getProfile(userId);
     return {
@@ -27,8 +29,8 @@ export class AppController {
   @Put('profile')
   @UseGuards(AuthGuard)
   async updateProfile(
-    @Req() req: any,
-    @Body() body: { fullName: string; email: string },
+    @Req() req: RequestWithUser,
+    @Body() body: UpdateProfileDto,
   ) {
     const userId = req.user.sub;
     const user = await this.appService.updateProfile(userId, body.fullName, body.email);

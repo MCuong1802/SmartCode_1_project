@@ -3,15 +3,15 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from './user.entity';
-import { Note } from './note.entity';
-import { Category } from './category.entity';
+import { User } from './user/user.entity';
+import { Note } from './note/note.entity';
+import { Category } from './category/category.entity';
 import { RefreshToken } from './auth/refresh-token.entity';
 import { AuthModule } from './auth/auth.module';
-import { CategoryController } from './category.controller';
-import { CategoryService } from './category.service';
-import { NoteController } from './note.controller';
-import { NoteService } from './note.service';
+import { CategoryController } from './category/category.controller';
+import { CategoryService } from './category/category.service';
+import { NoteController } from './note/note.controller';
+import { NoteService } from './note/note.service';
 
 @Module({
   imports: [

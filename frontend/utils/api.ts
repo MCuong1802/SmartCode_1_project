@@ -1,6 +1,6 @@
 export const apiFetch = async (url: string, options: RequestInit = {}) => {
   let token = localStorage.getItem('access_token');
-  
+
   const opts: RequestInit = {
     ...options,
     cache: options.cache || 'no-store', // Tắt cache mặc định để tránh dữ liệu cũ giữa các user
@@ -22,7 +22,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     if (refreshRes.ok) {
       const { access_token } = await refreshRes.json();
       localStorage.setItem('access_token', access_token);
-      
+
       // Gọi lại request ban đầu với token mới
       const retryOpts = {
         ...options,

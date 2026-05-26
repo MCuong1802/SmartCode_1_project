@@ -2,6 +2,8 @@ import { Controller, Post, Body, Req, Res, UnauthorizedException } from '@nestjs
 import { AuthService } from './auth.service';
 import type { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,12 +13,12 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  register(@Body() body: any) {
+  register(@Body() body: RegisterDto) {
     return this.authService.register(body.fullName, body.email, body.password);
   }
 
   @Post('login')
-  async login(@Body() body: any, @Res() res: Response) {
+  async login(@Body() body: LoginDto, @Res() res: Response) {
     const result = await this.authService.login(body.email, body.password);
     
     res.cookie('refresh_token', result.refresh_token, {
